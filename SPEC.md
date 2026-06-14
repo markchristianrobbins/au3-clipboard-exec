@@ -18,6 +18,28 @@ This document compiles the user requirements and instructions from `AGENTS.md` a
 
 ---
 
+## New Specs
+### Decomposing A line
+- Unless otherwise specified, the default win+alt+enter command copies its text from the entire line with sendkeys
+- lines must be decomposed to discover valid recognizable components
+  - a line may have two URLs or two filespecs
+- a single word in a line may actually be referring to a directory or a file
+- when a line is input then if it has more than one recognizable token, then a picker is offered showing tokens recognized
+- here are some things that are recognized not because of their form, but because of their existence
+  - a directory or file name
+  - a portion of a window title
+- in the picker, the user is shown the number of instances of the match
+- once chosen another picker can offer the instances themselves
+
+### Special prefixes
+- a + sign in front of a directory spec means new instance of dopus
+- a - sign in front of a directory spec to open opus reusing the tab but then to close the tab (ctrl+f4) and keep picker up as to return to it
+- a @ sign in front of a directory spec means to open or activate cursor on that directory
+- a # sign in front of a directory spec means to open or activate obsidian on that directory
+- a - sign in front of # or @ means to activate and close those items
+
+
+
 ## 📋 Originally Requested Specifications
 
 - **Silent CLI Executor**: Must capture DOS command layouts (`> [Command]`) invisibly without displaying interactive Command Prompt windows (which usually interrupt user workflow).

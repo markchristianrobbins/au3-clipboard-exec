@@ -139,7 +139,7 @@ Func _Picker_GUICreateRowPool($iMaxDisplayRows, $iInputAreaHeight, $iRowHeight, 
     Next
 EndFunc
 
-Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPgUp, ByRef $hDPgDn, ByRef $hDHome, ByRef $hDEnd, ByRef $hDEnter, ByRef $hDCtrlEnter, ByRef $hDEscape, ByRef $hDCopy, ByRef $hDBackspace, ByRef $hDCtrlBS)
+Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPgUp, ByRef $hDPgDn, ByRef $hDHome, ByRef $hDEnd, ByRef $hDEnter, ByRef $hDCtrlEnter, ByRef $hDEscape, ByRef $hDCopy, ByRef $hDBackspace, ByRef $hDCtrlBS, ByRef $hDCtrlInsert)
     $hDUp = GUICtrlCreateDummy()
     $hDDown = GUICtrlCreateDummy()
     $hDPgUp = GUICtrlCreateDummy()
@@ -152,6 +152,7 @@ Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPg
     $hDCopy = GUICtrlCreateDummy()
     $hDBackspace = GUICtrlCreateDummy()
     $hDCtrlBS = GUICtrlCreateDummy()
+    $hDCtrlInsert = GUICtrlCreateDummy()
 
     Local $aAccelTable = [ _
         [ "{DOWN}", $hDDown ], _
@@ -166,7 +167,7 @@ Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPg
         [ "{BS}", $hDBackspace ], _
         [ "^{BS}", $hDCtrlBS ], _
         [ "^c", $hDCopy ], _
-        [ "^{INSERT}", $hDCopy ] _
+        [ "^{INSERT}", $hDCtrlInsert ] _
     ]
     GUISetAccelerators($aAccelTable, $hWnd)
 EndFunc

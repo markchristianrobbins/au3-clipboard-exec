@@ -70,7 +70,7 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     GUICtrlSetState($g_hNoResults, $GUI_HIDE)
     GUICtrlSetResizing($g_hNoResults, $GUI_DOCKALL)
     
-    _Picker_GUISetUpAccelerators($g_hPickerGUI, $g_hDUp, $g_hDDown, $g_hDPgUp, $g_hDPgDn, $g_hDHome, $g_hDEnd, $g_hDEnter, $g_hDCtrlEnter, $g_hDEscape, $g_hDCopy, $g_hDBackspace, $g_hDCtrlBS)
+    _Picker_GUISetUpAccelerators($g_hPickerGUI, $g_hDUp, $g_hDDown, $g_hDPgUp, $g_hDPgDn, $g_hDHome, $g_hDEnd, $g_hDEnter, $g_hDCtrlEnter, $g_hDEscape, $g_hDCopy, $g_hDBackspace, $g_hDCtrlBS, $g_hDCtrlInsert)
     
     GUISetState(@SW_SHOW, $g_hPickerGUI)
     WinActivate($g_hPickerGUI)
@@ -116,10 +116,17 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
         If $g_iDisplayCount > 0 Then
             Local $aCursorInfo = GUIGetCursorInfo($g_hPickerGUI)
             If IsArray($aCursorInfo) Then
-                Local $iHoveredCtrlID = $aCursorInfo[4], $iMouseX = $aCursorInfo[0], $iMouseY = $aCursorInfo[1]
-                If $iMouseX <> $g_iLastMouseX Or $iMouseY <> $g_iLastMouseY Then
-                    $g_iLastMouseX = $iMouseX
-                    $g_iLastMouseY = $iMouseY
+                Local $iHoveredCtrlID = $aCursorInfo[4]
+                Local $iMouseX = $aCursorInfo[0]
+                Local $iMouseY = $aCursorInfo[1]
+                Local $bRightClicked = ($aCursorInfo[3] == 1)
+                
+                If $iMouseX <> $g_iLastMouseX Or $iMouseY <> $g_iLastMouseY Or $bRightClicked Then
+                    If $iMouseX <> $g_iLastMouseX Or $iMouseY <> $g_iLastMouseY Then
+                        $g_iLastMouseX = $iMouseX
+                        $g_iLastMouseY = $iMouseY
+                    EndIf
+                    
                     For $i = 0 To $g_iDisplayCount - 1
                         If $iHoveredCtrlID == $g_aRowIcon[$i + 1] Or $iHoveredCtrlID == $g_aRowIdxCtrl[$i + 1] Or $iHoveredCtrlID == $g_aRowBorder[$i + 1] Or $iHoveredCtrlID == $g_aRowBg[$i + 1] Or $iHoveredCtrlID == $g_aRowPre[$i + 1] Or $iHoveredCtrlID == $g_aRowMatch[$i + 1] Or $iHoveredCtrlID == $g_aRowPost[$i + 1] Or $iHoveredCtrlID == $g_aRowPath[$i + 1] Or $iHoveredCtrlID == $g_aRowDepthInfo[$i + 1] Then
                             If $i <> $g_iSelectedIndex Then
@@ -131,6 +138,21 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
                                 _Picker_UpdateFocusBorder($g_hRowFocusL, $g_hRowFocusR, $g_hRowFocusT, $g_hRowFocusB, $iRowX, $iActiveTop, $iRowWidth, $iSpecColor, True)
                                 _Picker_UpdateStatusText($g_hStatusText, $g_hStatusBg, $g_aFilteredPaths, $g_iSelectedIndex, $g_iScrollOffset, $g_bExploreMode, $g_sExploreDir, UBound($g_aFilteredPaths) - $g_iRecentCount, $g_iRecentCount)
                             EndIf
+                            
+                            If $bRightClicked Then
+                                Local $sRightClickPath = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
+                                If StringInStr($sRightClickPath, " [window") > 0 Then
+                                    Local $sRightClickWin = StringRegExpReplace($sRightClickPath, "(?i)\s+\[window(?::[^\]]+)?\]\s*$", "")
+                                    
+                                    ; Release button protection
+                                    While GUIGetCursorInfo($g_hPickerGUI)[3] == 1
+                                        Sleep(10)
+                                    WEnd
+                                    
+                                    _Picker_Show_WinContextMenu($g_hPickerGUI, $sRightClickWin)
+                                EndIf
+                            EndIf
+                            
                             ExitLoop
                         EndIf
                     Next

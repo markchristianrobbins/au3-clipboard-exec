@@ -29,6 +29,14 @@
     - Formalized strict workflow parameters requiring `AILOG.md` edits, updated commit message registries, and inline `AITASKS.md` checklists for every turn.
 - [x] Support folder file:/// URLs in directory router
     - Enabled identification and parsing of file:/// and file:// addresses (including local and network shares) to behave exactly like standard native paths in Directory Opus.
+- [x] Enforce overlapped window selection and state tracking
+    - Screen WinList outputs to allow ONLY overlapped windows style, filtering out unneeded systems/popups.
+    - Suffix window titles dynamic states as `[window: minimized]`, `[window: hidden]`, or `[window: minimized & hidden]`.
+- [x] Bind Ctrl+Insert to copy complete window metrics report
+    - Map `^{INSERT}` to a dedicated dummy accelerator, gathering process PID/path, HWND handle, position coordinates, and style flags into a clean clipboard report.
+- [x] Add right-click context menu options to manage window states
+    - Intercept Mouse secondary right-clicks on window rows inside the interactive loop.
+    - Construct standard native TrackPopupMenu menus listing: Copy Info, Minimize, Maximize, Restore, Close.
 
 ## [x] Implement New Specifications (Line Decomposition & Prefixes)
 - [x] Implement Line Decomposition logic on Win+Alt+Enter input:

@@ -37,4 +37,15 @@ Func _Util_PurgeStuckModifiers()
     ControlSend("[ACTIVE]", "", "", "{CTRLUP}", 0)
 EndFunc
 
+; ==============================================================================
+; Public API: Checks if a window is an overlapped window using direct DLL call
+; ==============================================================================
+Func _Util_IsOverlappedWindow($hWnd)
+    Local $aRet = DllCall("user32.dll", "long", "GetWindowLongW", "hwnd", $hWnd, "int", -16) ; -16 is $GWL_STYLE
+    If @error Or Not IsArray($aRet) Then Return False
+    Local $iStyle = $aRet[0]
+    ; Overlapped windows have neither WS_CHILD (0x40000000) nor WS_POPUP (0x80000000) style
+    Return (BitAND($iStyle, 0x40000000) == 0) And (BitAND($iStyle, 0x80000000) == 0)
+EndFunc
+
 ; modules\_utils.au3

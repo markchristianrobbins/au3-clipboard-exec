@@ -72,5 +72,6 @@ Global $g_hDEscape = 0
 Global $g_hDBackspace = 0
 Global $g_hDCtrlBS = 0
 Global $g_hDCopy = 0
+Global $g_hDCtrlInsert = 0
 
 ; End of file: _picker_globals.au3

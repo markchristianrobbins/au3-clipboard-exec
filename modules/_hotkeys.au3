@@ -428,11 +428,25 @@ Func _Hotkey_WinCtrlAltEnter()
         Local $sTitle = $aWinList[$i][0]
         Local $hWnd = $aWinList[$i][1]
         
-        ; Verify if window is visible, has titles, and is not a system background thread task
-        If $sTitle <> "" And BitAND(WinGetState($hWnd), 2) And $sTitle <> "Program Manager" And $hWnd <> $g_hPickerGUI Then
-            If Not $oSeenWins.Exists(StringLower($sTitle)) Then
-                $oSeenWins.Add(StringLower($sTitle), 1)
-                $aWindows[$iWinCount] = $sTitle & " [window]"
+        ; Verify if window is an overlapped window, has title, and is not a system background task or our own GUI
+        If $sTitle <> "" And $sTitle <> "Program Manager" And $hWnd <> $g_hPickerGUI And _Util_IsOverlappedWindow($hWnd) Then
+            Local $iState = WinGetState($hWnd)
+            Local $bIsVisible = (BitAND($iState, 2) > 0)
+            Local $bIsMinimized = (BitAND($iState, 16) > 0)
+            
+            Local $sSuffix = " [window]"
+            If Not $bIsVisible And $bIsMinimized Then
+                $sSuffix = " [window: minimized & hidden]"
+            ElseIf Not $bIsVisible Then
+                $sSuffix = " [window: hidden]"
+            ElseIf $bIsMinimized Then
+                $sSuffix = " [window: minimized]"
+            EndIf
+            
+            Local $sItemTitle = $sTitle & $sSuffix
+            If Not $oSeenWins.Exists(StringLower($sItemTitle)) Then
+                $oSeenWins.Add(StringLower($sItemTitle), 1)
+                $aWindows[$iWinCount] = $sItemTitle
                 $iWinCount += 1
             EndIf
         EndIf
@@ -473,8 +487,8 @@ Func _Hotkey_WinCtrlAltEnter()
     If $sResult == "" Then Return
     
     ; 5. Route selection
-    If StringInStr($sResult, " [window]") > 0 Then
-        Local $sCleanWin = StringRegExpReplace($sResult, "(?i)\s+\[window\]\s*$", "")
+    If StringInStr($sResult, " [window") > 0 Then
+        Local $sCleanWin = StringRegExpReplace($sResult, "(?i)\s+\[window(?::[^\]]+)?\]\s*$", "")
         Local $hWndTarget = WinGetHandle($sCleanWin)
         If $hWndTarget Then
             WinSetState($hWndTarget, "", @SW_RESTORE)

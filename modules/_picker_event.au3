@@ -199,6 +199,23 @@ Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
                 GUICtrlSetData($g_hStatusText, $sOriginalStatus)
             EndIf
 
+        Case $iMsg == $g_hDCtrlInsert
+            If $g_iDisplayCount > 0 And ($g_iScrollOffset + $g_iSelectedIndex) < UBound($g_aFilteredPaths) Then
+                Local $sCopyPath = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
+                Local $sMsgStatus = ""
+                If StringInStr($sCopyPath, " [window") > 0 Then
+                    Local $sCleanWin = StringRegExpReplace($sCopyPath, "(?i)\s+\[window(?::[^\]]+)?\]\s*$", "")
+                    $sMsgStatus = _Picker_CopyWindowInfo($sCleanWin)
+                Else
+                    ClipPut($sCopyPath)
+                    $sMsgStatus = "📋 COPIED: " & $sCopyPath
+                EndIf
+                Local $sOriginalStatus = GUICtrlRead($g_hStatusText)
+                GUICtrlSetData($g_hStatusText, $sMsgStatus)
+                Sleep(1000)
+                GUICtrlSetData($g_hStatusText, $sOriginalStatus)
+            EndIf
+
         Case Else
             _Picker_HandleKeyPress($iMsg, $aAllMatches)
             For $i = 1 To $g_iDisplayCount

@@ -15,14 +15,39 @@
 
 ## Commit Message
 ```text
-feat: suppress recents; bind Win+Ctrl+Alt+Enter to unified windows & directories picker
+feat: overlapped window filtering; show minimized/hidden state suffix; bind Ctrl+Insert copy info; add secondary right-click context menu
 
-- Bypassed recents loading/recording internally to satisfy disabling requests.
-- Integrated '#^!{ENTER}' hotkey triggering combined WinList and crawled index paths.
-- Suffix-tagged items enabling dynamic visual icon extraction and targeted execution routing.
+- Limited list window harvest to overlapped window style by checking WS_CHILD and WS_POPUP bitmasks using direct user32 DLL longs.
+- Dynamic suffixing for minimized and invisible window properties [window: minimized], [window: hidden], [window: minimized & hidden].
+- Re-routed standard copy hotkeys to custom ^{INSERT} accelerator to copy deeply formatted system window diagnostic metrics.
+- Tracked secondary mouse releases in the interactive picker loop to trigger native TrackPopupMenu offering copy, minimize, maximize, restore, and close actions.
 ```
 
 ## Log Entries
+
+## [2026-06-14T12:35:00Z]
+### 🎯 Primary Goals & Requirements
+- Target and display only standard overlapped windows (main apps) inside the Search Picker, filtering out child structures and dialog popups.
+- Visually indicate minimized and/or hidden windows using dynamic suffixes within the list item label.
+- Bind the custom `Ctrl+Insert` hotkey to format and copy deep window metrics directly to the clipboard.
+- Embed right-click context menus on window items, supporting real-time management actions: Copy Info, Minimize, Maximize, Restore, and Close.
+
+### 🛠️ Completed Changes in this Session
+- **Overlapped Window Verification**: Designed `_Util_IsOverlappedWindow()` inside `/modules/_utils.au3` executing direct DLL `GetWindowLongW` styles lookup checking standard `WS_CHILD` and `WS_POPUP` bitmasks.
+- **Window Suffix Indicators**: Suffix-tagged items depending on visibility and minimized properties inside the `WinList` harvester in `/modules/_hotkeys.au3`, updating routing regular expressions to match arbitrary suffix descriptors seamlessly.
+- **Window Metrics Report Clip Engine**: Added `_Picker_CopyWindowInfo()` compiling a detailed text block representation of a handle's coordinates, process info, window state bits, and class name to write to the clipboard.
+- **Assigned Ctrl+Insert Key Shortcut**: Hooked custom `^{INSERT}` accelerator in `/modules/_picker_gui.au3` and mapped its custom dummy message handlers cleanly to execute window metrics clip reporting in `/modules/_picker_event.au3`.
+- **Engineered Context Menus on Window Rows**: Captured mouse-drag and secondary right-clicks in `/modules/_picker.au3`, triggering native win32 `TrackPopupMenu` to allow prompt window-status actions on target handles.
+
+### 🔸 Affected Files
+- `/modules/_utils.au3`
+- `/modules/_picker_helpers.au3`
+- `/modules/_picker_gui.au3`
+- `/modules/_picker.au3`
+- `/modules/_picker_event.au3`
+- `/modules/_hotkeys.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
 
 ## [2026-06-14T12:20:00Z]
 ### 🎯 Primary Goals & Requirements

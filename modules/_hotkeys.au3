@@ -4,6 +4,7 @@
 #include "_ui.au3"
 #include "_config.au3"
 #include "_recognizer.au3"
+#include "_picker.au3"
 #include "_handler_dopus.au3"
 #include "_handler_zdot.au3"
 #include "_handler_cmd.au3"
@@ -26,14 +27,27 @@ Func _Hotkey_ContextOp()
     
     Local $hWndTarget = WinGetHandle("[ACTIVE]")
 
-    ; CRITICAL FIX: Read the SendKeys macro directly as a flat string variable (Bypasses array index bugs)
-    Local $sCleanKeys = StringStripWS(_Config_GetActiveAppProfile(), 3)
+    ; Execute our safe window profiling engine
+    Local $aAppProfile = _Config_GetActiveAppProfile()
+    If @error Then
+        Local $sErrMsg = "Context Error: Active window does not match tracking configurations."
+        ClipPut($sErrMsg)
+        _UI_ShowToast("Context Error", $sErrMsg)
+        Return
+    EndIf
+
+    ; Correct array indexing alignment parameters
+    Local $sName   = $aAppProfile 
+    Local $sKeys   = $aAppProfile 
+    Local $sScript = $aAppProfile 
 
     ; Clear clipboard before running macros to ensure fresh verification loops
     ClipPut("") 
     Sleep(30)
 
-    If $sCleanKeys <> "" Then
+    If $sKeys <> "" Then
+        Local $sCleanKeys = StringStripWS($sKeys, 3)
+        
         ; Release physical modifier keys completely before typing to fix injection errors
         _Util_WaitForModifierRelease()
         _Util_PurgeStuckModifiers()
@@ -43,7 +57,7 @@ Func _Hotkey_ContextOp()
         WinWaitActive($hWndTarget, "", 1)
         Sleep(50)
 
-        ; Send macro layout keys natively straight down the focused global thread
+        ; Send macro layout keys natively straight down focused global thread
         Send($sCleanKeys)
         
         ; Verification loop waiting for clipboard to catch text data
@@ -66,6 +80,9 @@ Func _Hotkey_ContextOp()
             _UI_ShowToast("Pipeline Error", $sPipelineError)
             Return
         EndIf
+    ElseIf $sScript <> "" Then 
+        Local $iPID = Run('"' & @AutoItExe & '" "' & $sScript & '"')
+        ProcessWaitClose($iPID, 3)
     EndIf
     
     _Hotkey_ClipOp()
@@ -84,6 +101,37 @@ Func _Hotkey_ClipOp()
         Return
     EndIf
     
+    ; Normalize input string to perform matching sweeps
+    Local $sTriggerCmd = StringLower(StringStripWS($sClip, 3))
+
+    ; --- DIRECT INTERCEPT RUNTIME ROUTE FOR PICKER TESTING ---
+    If $sTriggerCmd == "picker" Then
+        ; Populate a hardcoded matrix of development folders to verify layout geometry
+        Local $aDemoDataset[8] = [ _
+            "C:\$data\zdoti", _
+            "C:\_\au3-clipboard-exec", _
+            "C:\_\au3-clipboard-exec\modules", _
+            "C:\Projects\WorkNotes", _
+            "C:\Projects\Automation\Scripts", _
+            "C:\Program Files\GPSoftware\Directory Opus", _
+            "C:\Users\Mark\AppData\Local\Programs\cursor", _
+            "C:\$data\logs" _
+        ]
+        
+        _UI_ShowToast("Launcher Engine", "Initializing full screen demo fuzzy dataset array...")
+        
+        ; Feed array into the main non-blocking picker window engine thread
+        Local $sSelection = _Picker_ShowGUI($aDemoDataset, "DEMO PICKER INTERFACE PANELS", "au3")
+        
+        If $sSelection <> "" Then
+            _UI_ShowToast("Picker Selection Caught", "Absolute Selected Path Returned: " & $sSelection)
+        Else
+            _UI_ShowToast("Picker Dismissed", "Selection action canceled by focus drop or escape hook.")
+        Endif
+        Return
+    EndIf
+    ; ---------------------------------------------------------
+
     ; 1. Execute regular expression pattern resolution routing
     Local $sType = _Recognizer_Evaluate($sClip)
     

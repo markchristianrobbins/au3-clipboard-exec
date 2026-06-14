@@ -163,6 +163,10 @@ Func _Index_LoadIndexedPaths()
         Local $aEmpty[1] = [""]
         Return $aEmpty
     Endif
+    If $g_oIndexMap.Count == 0 Then
+        Local $aEmpty[1] = [""]
+        Return $aEmpty
+    Endif
     
     Local $aKeys = $g_oIndexMap.Keys()
     _ArraySort($aKeys)

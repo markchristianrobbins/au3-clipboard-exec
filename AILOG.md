@@ -15,18 +15,50 @@
 
 ## Commit Message
 ```text
-feat: replace context win32 menu with searchable mini-picker, add Reload Index button, make toolbar checkboxes, fix mouse hover, and integrate permanent excludes
+feat: integrate virtual scrollbar, F1 help window overlay, compact menu-like options picker, start-up active window focus, and Apps key beep signal
 
-- Created a layout-aligned, block-free searchable miniature options picker for window items (Copy Info, Minimize, Maximize, Restore, Close, Exclude Window).
-- Added "[Reload Index]" text button on the status toolbar and wired it to forced recursive index cralwer `_Index_ForceReload()`.
-- Ensured directories are included in `Win+Ctrl+Alt+Enter` results by fixing the `$g_aActiveBasePaths` synchronization bug.
-- Prevented mouse hover from shifting focus or selected indexing.
-- Re-routed selection to single click to focus and double click to run/navigate.
-- Configured "Exclude Window" to persistently write title, class, and process values to clipboard-exec.ini to filter matching outcomes forever.
-- Replaced the toolbar status bar layout with high-contrast clickable checkmark icons [x] and [ ].
+- Embedded a high-contrast virtual scrollbar updating track and thumb label coordinates responsively on list navigation.
+- Created `/modules/_picker_help.au3` and mapped the F1 accelerator key to display a customized HUD listing shortcuts and commands.
+- Revamped the searchable options mini-picker layout (300px width, menu-like rows, no titlebar) and added "Activate" as the top action.
+- Pre-loaded active window handles at startup to focus corresponding window elements instantly with scroll offsets applied.
+- Bound a native high-frequency beep signal to the Apps menu hotkey hook.
+- Added full suffix tag trimming to Directory Opus and combined-selection double-click events, allowing instant local navigation.
+- Fixed an array subscript out of bounds crash in the mini-picker's fuzzy-query logic by sizing the match list dynamically based on UBound($aOptions).
 ```
 
 ## Log Entries
+
+## [2026-06-14T20:50:00Z]
+### 🎯 Primary Goals & Requirements
+- Streamline miniature context helper options picker to look compact and menu-like (reduced width to 300px, removed caption/titlebar labels, and set higher row density).
+- Enable double click to restore active windows or open directories safely within the combined picker.
+- Add an "Activate" action to the top of the context menu options list.
+- Focus and index-scroll to the currently active application window row upon launcher GUI startup automatically.
+- Setup a high-contrast custom virtual scrollbar displaying the scrolling position and list proportions dynamically.
+- Implement an audio warning beep signal whenever the Apps key `{APPS}` is pressed.
+- Create a visual Help window and bind the F1 key shortcut to display it.
+- Fix any potential array out-of-bounds subscripts during mini-picker query filtering.
+
+### 🛠️ Completed Changes in this Session
+- **Compact Options Mini-Picker (`_modules/_picker_mini.au3`)**: Redefined geometry, reduced bounds width from 450px to 300px, removed standard caption backgrounds and text, and compressed row heights to 32px to create an elegant drop-down menu appearance. Added "Activate" at the top of the options index. Dynamically allocated temporary filtering arrays using `UBound($aOptions)` to resolve potential array dimension out-of-bound errors.
+- **Start-Up Active Focus Engine (`/modules/_picker.au3`)**: Captured active window contexts before launcher initialization and searched lists to highlight corresponding handle entries instantly at row launch.
+- **High-Contrast Virtual Scrollbar (`/modules/_picker_render.au3`)**: Added track and thumb labels that update height, position, and scroll offsets reactively during keyboard arrow runs.
+- **Custom Shortcut Help HUD (`/modules/_picker_help.au3`)**: Implemented a standalone modal help drawer illustrating keybind tables and commands, mapped to the `{F1}` shortcut.
+- **Shorcut Audio Beeper (`/modules/_picker_event.au3`)**: Configured a clear `Beep(800, 150)` tone to fire whenever the Applications context menu key is pressed.
+- **Robust Suffix and Class Slicers (`/modules/_handler_dopus.au3`)**: Injected regex trims to prevent tag indicators like ` [dir]` or ` [window]` from interfering with Opus local folder listings or application routing.
+
+### 🔸 Affected Files
+- `/modules/_picker_help.au3`
+- `/modules/_picker.au3`
+- `/modules/_picker_globals.au3`
+- `/modules/_picker_gui.au3`
+- `/modules/_picker_mini.au3`
+- `/modules/_picker_event.au3`
+- `/modules/_picker_render.au3`
+- `/modules/_handler_dopus.au3`
+- `/modules/_index.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
 
 ## [2026-06-14T20:30:00Z]
 ### 🎯 Primary Goals & Requirements

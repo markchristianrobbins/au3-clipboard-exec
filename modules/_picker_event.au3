@@ -233,13 +233,21 @@ Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
             EndIf
 
         Case $iMsg == $g_hDApps
+            Beep(800, 150)
             If $g_iDisplayCount > 0 And ($g_iScrollOffset + $g_iSelectedIndex) < UBound($g_aFilteredPaths) Then
                 Local $sSelectedPathVal = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
                 If StringInStr($sSelectedPathVal, " [window") > 0 Then
                     Local $sCleanWinText = StringRegExpReplace($sSelectedPathVal, "(?i)\s+\[window(?::[^\]]+)?\]\s*$", "")
-                    _Picker_Show_WinContextMenu($g_hPickerGUI, $sCleanWinText)
+                    Local $sMiniChoice = _Picker_Show_WinContextMenu($g_hPickerGUI, $sCleanWinText)
+                    If $sMiniChoice == "Activate" Then
+                        $g_sSelectedPath = $sSelectedPathVal
+                        Return True
+                    EndIf
                 EndIf
             EndIf
+
+        Case $iMsg == $g_hDF1
+            _Picker_ShowHelpGUI($g_hPickerGUI)
 
         Case Else
             _Picker_HandleKeyPress($iMsg, $aAllMatches)

@@ -25,8 +25,12 @@
 #include "_picker_event.au3"
 #include "_picker_keys.au3"
 #include "_picker_mini.au3"
+#include "_picker_help.au3"
 
 Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuery = "")
+    Local $hWndActiveBefore = WinGetHandle("[ACTIVE]")
+    Local $sActiveTitleBefore = WinGetTitle($hWndActiveBefore)
+
     Local $iRowHeight = 42, $iInputAreaHeight = 124, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
     Local $iMaxFitRows = Int((@DesktopHeight - $iInputAreaHeight - 80) / $iRowHeight)
     If $iMaxDisplayRows > $iMaxFitRows Then $iMaxDisplayRows = $iMaxFitRows
@@ -68,6 +72,15 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     $g_hRowFocusT = GUICtrlCreateLabel("", 0, 0, 1, 1)
     $g_hRowFocusB = GUICtrlCreateLabel("", 0, 0, 1, 1)
     
+    ; Create Virtual Scrollbar track and thumb labels
+    $g_hScrollTrack = GUICtrlCreateLabel("", 688, $iInputAreaHeight + 8, 4, ($iMaxDisplayRows * $iRowHeight))
+    GUICtrlSetBkColor($g_hScrollTrack, 0x151515)
+    GUICtrlSetState($g_hScrollTrack, $GUI_HIDE)
+    
+    $g_hScrollThumb = GUICtrlCreateLabel("", 687, $iInputAreaHeight + 8, 6, 20)
+    GUICtrlSetBkColor($g_hScrollThumb, 0x4F4F4F)
+    GUICtrlSetState($g_hScrollThumb, $GUI_HIDE)
+    
     $g_hNoResults = GUICtrlCreateLabel("No matching directories found in index map", $iRowX, $iInputAreaHeight + 14, $iRowWidth, 36, BitOR($SS_CENTER, $SS_CENTERIMAGE))
     GUICtrlSetFont($g_hNoResults, 10, 400, 2, "Segoe UI")
     GUICtrlSetColor($g_hNoResults, 0x888888)
@@ -75,7 +88,7 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     GUICtrlSetState($g_hNoResults, $GUI_HIDE)
     GUICtrlSetResizing($g_hNoResults, $GUI_DOCKALL)
     
-    _Picker_GUISetUpAccelerators($g_hPickerGUI, $g_hDUp, $g_hDDown, $g_hDPgUp, $g_hDPgDn, $g_hDHome, $g_hDEnd, $g_hDEnter, $g_hDCtrlEnter, $g_hDEscape, $g_hDCopy, $g_hDBackspace, $g_hDCtrlBS, $g_hDCtrlInsert, $g_hDAltH, $g_hDAltM, $g_hDApps)
+    _Picker_GUISetUpAccelerators($g_hPickerGUI, $g_hDUp, $g_hDDown, $g_hDPgUp, $g_hDPgDn, $g_hDHome, $g_hDEnd, $g_hDEnter, $g_hDCtrlEnter, $g_hDEscape, $g_hDCopy, $g_hDBackspace, $g_hDCtrlBS, $g_hDCtrlInsert, $g_hDAltH, $g_hDAltM, $g_hDApps, $g_hDF1)
     
     GUIRegisterMsg(0x007B, "_Picker_WM_CONTEXTMENU")
     
@@ -94,8 +107,28 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     $g_aFilteredPaths = $aInitialFilterSeed
     
     $g_iDisplayCount = 0
-    $g_iSelectedIndex = 0
-    $g_iScrollOffset = 0
+    
+    Local $iInitialFocusIdx = 0
+    If $hWndActiveBefore And WinExists($hWndActiveBefore) Then
+        Local $sActiveCleanTitle = StringStripWS($sActiveTitleBefore, 3)
+        If $sActiveCleanTitle <> "" Then
+            For $i = 0 To UBound($aAllMatches) - 1
+                If StringInStr($aAllMatches[$i], $sActiveCleanTitle) > 0 And StringInStr($aAllMatches[$i], " [window") > 0 Then
+                    $iInitialFocusIdx = $i
+                    ExitLoop
+                EndIf
+            Next
+        EndIf
+    EndIf
+    
+    If $iInitialFocusIdx >= $iMaxDisplayRows Then
+        $g_iScrollOffset = $iInitialFocusIdx - ($iMaxDisplayRows - 1)
+        $g_iSelectedIndex = $iMaxDisplayRows - 1
+    Else
+        $g_iScrollOffset = 0
+        $g_iSelectedIndex = $iInitialFocusIdx
+    EndIf
+    
     $g_iRecentCount = 0
     $g_bExploreMode = False
     $g_sExploreDir = ""

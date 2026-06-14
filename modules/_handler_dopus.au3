@@ -13,6 +13,9 @@ Global Const $g_sDOpusRt = "C:\Program Files\GPSoftware\Directory Opus\dopusrt.e
 Func _Handler_OpenInDOpus($sFullPath, $sType)
     Local $bNewWindow = False
     Local $sCleanPath = StringStripWS($sFullPath, 3)
+    
+    ; Strip type indicators [dir] [file] [window]
+    $sCleanPath = StringRegExpReplace($sCleanPath, "(?i)\s+\[(?:dir|file|window)(?::[^\]]+)?\]\s*$", "")
 
     ; ORDER OF OPERATIONS FIX 1: Detect and slice off the breakout prefix operator first
     If StringLeft($sCleanPath, 1) = "+" Then

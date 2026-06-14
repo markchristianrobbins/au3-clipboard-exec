@@ -105,6 +105,22 @@
     - Configured "Exclude Window" to persistently match and bypass titles, classes, and process executables from harvested outcomes.
 - [x] Checkbox-style toolbar options
     - Replaced the text on the toolbar with interactive checkmarks matching `[x]` (enabled) and `[ ]` (disabled).
+- [x] Streamline miniature picker dimensions (menu-like, 300px width, no titlebar)
+    - Designed super compact, border-focused popup GUI utilizing a streamlined 300px layout width.
+- [x] Open/Activate windows on double click
+    - Routed double click on list items of type window to wake up, restore, and focus the application handle cleanly.
+- [x] Focus active window item on start
+    - Prefetches active handle title prior to GUI creation and offsets scroll coordinates to highlight the matching listing.
+- [x] Add "Activate" option to top of context options picker
+    - Wired "Activate" to restore and activate the window handle, allowing swift item selection.
+- [x] Audio warning feedback beep on Applications key "{APPS}"
+    - Connected standard native high-frequency Beep(800, 150) signal to Apps menu secondary trigger.
+- [x] Virtual high-contrast scrollbar
+    - Added reactive scroll track and thumb labels to adjust visible thumb heights and positions dynamically during keyboard navigations.
+- [x] Visual keyboard shortcut help overlay window
+    - Created a modal HUD triggered by the F1 key, displaying standard shortcut combinations and command descriptions clearly.
+- [x] Dynamic menu option allocation bounds fix
+    - Corrected `$aTempList` allocation bounds inside `_picker_mini.au3` to size dynamically according to `UBound($aOptions)`, solving the out-of-bounds error on fuzzy queries.
 
 ## [ ] New Settings
 - [ ] `sendkeys` under `[Cursor]` profile

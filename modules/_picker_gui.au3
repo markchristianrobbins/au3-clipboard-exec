@@ -157,7 +157,7 @@ Func _Picker_GUICreateRowPool($iMaxDisplayRows, $iInputAreaHeight, $iRowHeight, 
     Next
 EndFunc
 
-Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPgUp, ByRef $hDPgDn, ByRef $hDHome, ByRef $hDEnd, ByRef $hDEnter, ByRef $hDCtrlEnter, ByRef $hDEscape, ByRef $hDCopy, ByRef $hDBackspace, ByRef $hDCtrlBS, ByRef $hDCtrlInsert, ByRef $hDAltH, ByRef $hDAltM, ByRef $hDApps)
+Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPgUp, ByRef $hDPgDn, ByRef $hDHome, ByRef $hDEnd, ByRef $hDEnter, ByRef $hDCtrlEnter, ByRef $hDEscape, ByRef $hDCopy, ByRef $hDBackspace, ByRef $hDCtrlBS, ByRef $hDCtrlInsert, ByRef $hDAltH, ByRef $hDAltM, ByRef $hDApps, ByRef $hDF1)
     $hDUp = GUICtrlCreateDummy()
     $hDDown = GUICtrlCreateDummy()
     $hDPgUp = GUICtrlCreateDummy()
@@ -174,6 +174,7 @@ Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPg
     $hDAltH = GUICtrlCreateDummy()
     $hDAltM = GUICtrlCreateDummy()
     $hDApps = GUICtrlCreateDummy()
+    $hDF1 = GUICtrlCreateDummy()
 
     Local $aAccelTable = [ _
         [ "{DOWN}", $hDDown ], _
@@ -192,7 +193,8 @@ Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPg
         [ "!h", $hDAltH ], _
         [ "!m", $hDAltM ], _
         [ "{APPS}", $hDApps ], _
-        [ "+{F10}", $hDApps ] _
+        [ "+{F10}", $hDApps ], _
+        [ "{F1}", $hDF1 ] _
     ]
     GUISetAccelerators($aAccelTable, $hWnd)
 EndFunc

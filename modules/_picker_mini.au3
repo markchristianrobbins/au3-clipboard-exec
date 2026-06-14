@@ -26,17 +26,17 @@ Func _Picker_ShowMiniGUI($hWndParent, $sWinTitle)
     If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\clipboard-exec.ini"
     If Not FileExists($sConfigIni) Then $sConfigIni = "clipboard-exec.ini"
 
-    Local $aOptions[6] = ["Copy Info", "Minimize", "Maximize", "Restore", "Close", "Exclude Window"]
-    Local $aOptionIcons[6] = [134, 24, 21, 22, 112, 109] ; shell32.dll icons matching actions
+    Local $aOptions[7] = ["Activate", "Copy Info", "Minimize", "Maximize", "Restore", "Close", "Exclude Window"]
+    Local $aOptionIcons[7] = [4, 134, 24, 21, 22, 112, 109] ; shell32.dll icons matching actions
 
-    Local $iWidth = 450
-    Local $iRowHeight = 36
-    Local $iInputAreaHeight = 90
-    Local $iRowX = 15
-    Local $iRowWidth = 420
-    Local $iMaxRows = 6
+    Local $iWidth = 300
+    Local $iRowHeight = 32
+    Local $iInputAreaHeight = 48
+    Local $iRowX = 10
+    Local $iRowWidth = 280
+    Local $iMaxRows = 7
 
-    Local $iHeight = $iInputAreaHeight + 8 + ($iMaxRows * $iRowHeight) + 12
+    Local $iHeight = $iInputAreaHeight + 8 + ($iMaxRows * $iRowHeight) + 10
     
     ; Get current mouse position to spawn mini picker close to mouse
     Local $tPoint = DllStructCreate("long X;long Y;")
@@ -62,29 +62,17 @@ Func _Picker_ShowMiniGUI($hWndParent, $sWinTitle)
     Local $hB = GUICtrlCreateLabel("", 0, $iHeight - 1, $iWidth, 1)
     GUICtrlSetBkColor($hB, 0xFF5500)
 
-    ; Title Bg
-    Local $hTitleBg = GUICtrlCreateLabel("", 15, 10, $iWidth - 30, 24)
-    GUICtrlSetBkColor($hTitleBg, 0x111111)
-    GUICtrlSetState($hTitleBg, $GUI_DISABLE)
-
-    Local $sShortTitle = $sWinTitle
-    If StringLen($sShortTitle) > 35 Then $sShortTitle = StringLeft($sShortTitle, 35) & "..."
-    Local $hTitleText = GUICtrlCreateLabel("  OPTIONS: " & StringUpper($sShortTitle), 20, 14, $iWidth - 40, 18)
-    GUICtrlSetFont($hTitleText, 8, 700, 0, "Segoe UI")
-    GUICtrlSetColor($hTitleText, 0xFF5500)
-    GUICtrlSetBkColor($hTitleText, $GUI_BKCOLOR_TRANSPARENT)
-
     ; Input Background
-    Local $hInputBg = GUICtrlCreateLabel("", 15, 44, $iWidth - 30, 36)
+    Local $hInputBg = GUICtrlCreateLabel("", 10, 10, $iWidth - 20, 30)
     GUICtrlSetBkColor($hInputBg, 0x252526)
     GUICtrlSetState($hInputBg, $GUI_DISABLE)
 
-    Local $hInputFieldMini = GUICtrlCreateInput("", 25, 50, $iWidth - 50, 24, $ES_AUTOHSCROLL)
+    Local $hInputFieldMini = GUICtrlCreateInput("", 18, 13, $iWidth - 36, 24, $ES_AUTOHSCROLL)
     GUICtrlSetFont($hInputFieldMini, 10, 400, 0, "Segoe UI")
     GUICtrlSetColor($hInputFieldMini, 0xFFFFFF)
     GUICtrlSetBkColor($hInputFieldMini, 0x252526)
 
-    Local $hDivider = GUICtrlCreateLabel("", 15, 88, $iWidth - 30, 1)
+    Local $hDivider = GUICtrlCreateLabel("", 10, 46, $iWidth - 20, 1)
     GUICtrlSetBkColor($hDivider, 0x3F3F46)
     GUICtrlSetState($hDivider, $GUI_DISABLE)
 
@@ -101,7 +89,7 @@ Func _Picker_ShowMiniGUI($hWndParent, $sWinTitle)
     GUICtrlSetBkColor($hNoResultsMini, $GUI_BKCOLOR_TRANSPARENT)
     GUICtrlSetState($hNoResultsMini, $GUI_HIDE)
 
-    ; Allocate Row Controls (6 rows max)
+    ; Allocate Row Controls
     Local $aRowBgMini[$iMaxRows]
     Local $aRowIconMini[$iMaxRows]
     Local $aRowTextMini[$iMaxRows]
@@ -114,11 +102,11 @@ Func _Picker_ShowMiniGUI($hWndParent, $sWinTitle)
         GUICtrlSetCursor($aRowBgMini[$i], 0)
         GUICtrlSetState($aRowBgMini[$i], $GUI_HIDE)
 
-        $aRowIconMini[$i] = GUICtrlCreateIcon("shell32.dll", 3, $iRowX + 12, $iTopPos + 8, 16, 16)
+        $aRowIconMini[$i] = GUICtrlCreateIcon("shell32.dll", 3, $iRowX + 10, $iTopPos + 7, 16, 16)
         GUICtrlSetBkColor($aRowIconMini[$i], $GUI_BKCOLOR_TRANSPARENT)
         GUICtrlSetState($aRowIconMini[$i], $GUI_HIDE)
 
-        $aRowTextMini[$i] = GUICtrlCreateLabel("", $iRowX + 38, $iTopPos + 8, $iRowWidth - 48, 18)
+        $aRowTextMini[$i] = GUICtrlCreateLabel("", $iRowX + 34, $iTopPos + 7, $iRowWidth - 44, 18)
         GUICtrlSetFont($aRowTextMini[$i], 9, 600, 0, "Segoe UI")
         GUICtrlSetBkColor($aRowTextMini[$i], $GUI_BKCOLOR_TRANSPARENT)
         GUICtrlSetState($aRowTextMini[$i], $GUI_HIDE)
@@ -164,7 +152,7 @@ Func _Picker_ShowMiniGUI($hWndParent, $sWinTitle)
             $sLastQueryMini = $sCurrentQuery
             
             ; Fuzzy match options
-            Local $aTempList[6]
+            Local $aTempList[UBound($aOptions)]
             Local $iCount = 0
             For $i = 0 To UBound($aOptions) - 1
                 If $sCurrentQuery == "" Or StringInStr(StringLower($aOptions[$i]), StringLower($sCurrentQuery)) > 0 Then
@@ -194,7 +182,7 @@ Func _Picker_ShowMiniGUI($hWndParent, $sWinTitle)
                     If $i < $iCount Then
                         ; Find original index to load match icon
                         Local $iOrigIdx = 0
-                        For $j = 0 To 5
+                        For $j = 0 To UBound($aOptions) - 1
                             If $aOptions[$j] == $aFilteredOptions[$i] Then
                                 $iOrigIdx = $j
                                 ExitLoop
@@ -328,6 +316,11 @@ EndFunc
 ; ==============================================================================
 Func _Picker_ExecuteMiniAction($sActionName, $sWinTitle, $hWndTarget)
     Select
+        Case $sActionName == "Activate"
+            WinSetState($hWndTarget, "", @SW_RESTORE)
+            _UI_ShowToast("Window Activated", "Activated window: " & $sWinTitle)
+            WinActivate($hWndTarget)
+
         Case $sActionName == "Copy Info"
             Local $sStatus = _Picker_CopyWindowInfo($sWinTitle)
             _UI_ShowToast("Copied", $sStatus)

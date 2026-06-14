@@ -218,6 +218,38 @@ Func _Picker_RenderVisibleList(ByRef $aRowIcon, ByRef $aRowIdxCtrl, ByRef $aRowB
             GUICtrlSetState($aRowDepthInfo[$i + 1], $GUI_HIDE)
         EndIf
     Next
+    _Picker_UpdateScrollbar($iInputAreaHeight, 42, $iMaxDisplayRows)
+EndFunc
+
+Func _Picker_UpdateScrollbar($iInputAreaHeight, $iRowHeight, $iMaxDisplayRows)
+    If Not IsDeclared("g_hScrollTrack") Or Not IsDeclared("g_hScrollThumb") Then Return
+    If $g_hScrollTrack == 0 Or $g_hScrollThumb == 0 Then Return
+    
+    Local $iTotalItems = UBound($g_aFilteredPaths)
+    If $iTotalItems <= $iMaxDisplayRows Then
+        GUICtrlSetState($g_hScrollTrack, $GUI_HIDE)
+        GUICtrlSetState($g_hScrollThumb, $GUI_HIDE)
+        Return
+    EndIf
+    
+    Local $iTrackHeight = $g_iDisplayCount * $iRowHeight
+    GUICtrlSetPos($g_hScrollTrack, 688, $iInputAreaHeight + 8, 4, $iTrackHeight)
+    GUICtrlSetState($g_hScrollTrack, $GUI_SHOW)
+    
+    Local $iThumbHeight = ($iMaxDisplayRows / $iTotalItems) * $iTrackHeight
+    If $iThumbHeight < 20 Then $iThumbHeight = 20
+    If $iThumbHeight > $iTrackHeight Then $iThumbHeight = $iTrackHeight
+    
+    Local $iMaxOffset = $iTotalItems - $iMaxDisplayRows
+    Local $iThumbTopOffset = 0
+    If $iMaxOffset > 0 Then
+        Local $fScrollFraction = $g_iScrollOffset / $iMaxOffset
+        $iThumbTopOffset = $fScrollFraction * ($iTrackHeight - $iThumbHeight)
+    EndIf
+    
+    Local $iThumbAbsoluteTop = $iInputAreaHeight + 8 + $iThumbTopOffset
+    GUICtrlSetPos($g_hScrollThumb, 687, $iThumbAbsoluteTop, 6, $iThumbHeight)
+    GUICtrlSetState($g_hScrollThumb, $GUI_SHOW)
 EndFunc
 
 Func _Picker_UpdateStatusText($hStatusText, $hStatusBg, ByRef $aFilteredPaths, $iSelectedIndex, $iScrollOffset, $bExploreMode, $sExploreDir, $iMatchesFound, $iRecentCount)

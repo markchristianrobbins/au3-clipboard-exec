@@ -245,8 +245,42 @@ Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
             _Picker_HandleKeyPress($iMsg, $aAllMatches)
             For $i = 1 To $g_iDisplayCount
                 If $iMsg == $g_aRowIcon[$i] Or $iMsg == $g_aRowIdxCtrl[$i] Or $iMsg == $g_aRowBorder[$i] Or $iMsg == $g_aRowBg[$i] Or $iMsg == $g_aRowPre[$i] Or $iMsg == $g_aRowMatch[$i] Or $iMsg == $g_aRowPost[$i] Or $iMsg == $g_aRowPath[$i] Or $iMsg == $g_aRowDepthInfo[$i] Then
-                    $g_sSelectedPath = $g_aFilteredPaths[$g_iScrollOffset + $i - 1]
-                    Return True
+                    Local $iClickedIdx = $i - 1
+                    If $iClickedIdx <> $g_iSelectedIndex Then
+                         ; Focus/select clicked row
+                        _Picker_HighlightRowDynamic($g_aRowIcon, $g_aRowIdxCtrl, $g_aRowBorder, $g_aRowBg, $g_aRowPre, $g_aRowMatch, $g_aRowPost, $g_aRowPath, $g_aRowDepthInfo, $g_aFilteredPaths, GUICtrlRead($g_hInputField), $g_iSelectedIndex, $g_iScrollOffset + $g_iSelectedIndex, False, ($g_iScrollOffset + $g_iSelectedIndex < $g_iRecentCount), $g_bExploreMode, $g_sExploreDir, $iInputAreaHeight)
+                        $g_iSelectedIndex = $iClickedIdx
+                        _Picker_HighlightRowDynamic($g_aRowIcon, $g_aRowIdxCtrl, $g_aRowBorder, $g_aRowBg, $g_aRowPre, $g_aRowMatch, $g_aRowPost, $g_aRowPath, $g_aRowDepthInfo, $g_aFilteredPaths, GUICtrlRead($g_hInputField), $g_iSelectedIndex, $g_iScrollOffset + $g_iSelectedIndex, True, ($g_iScrollOffset + $g_iSelectedIndex < $g_iRecentCount), $g_bExploreMode, $g_sExploreDir, $iInputAreaHeight)
+                        
+                        Local $iActiveTop = $iInputAreaHeight + 8 + ($g_iSelectedIndex * $iRowHeight)
+                        Local $iSpecColor = _Picker_GetBaseColor(_Picker_GetBaseName($g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]))
+                        _Picker_UpdateFocusBorder($g_hRowFocusL, $g_hRowFocusR, $g_hRowFocusT, $g_hRowFocusB, $iRowX, $iActiveTop, $iRowWidth, $iSpecColor, True)
+                        _Picker_UpdateStatusText($g_hStatusText, $g_hStatusBg, $g_aFilteredPaths, $g_iSelectedIndex, $g_iScrollOffset, $g_bExploreMode, $g_sExploreDir, UBound($g_aFilteredPaths) - $g_iRecentCount, $g_iRecentCount)
+                        
+                        $g_iLastClickedRow = $g_iSelectedIndex
+                        $g_hClickTimer = TimerInit()
+                    Else
+                        ; Double click check
+                        If TimerDiff($g_hClickTimer) < 400 And $g_iLastClickedRow == $g_iSelectedIndex Then
+                            ; Equivalent to Enter key
+                            Local $sFocusedPath = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
+                            If $g_bExploreMode Then
+                                Local $aNewPaths = _Picker_GetDescendants($aAllMatches, $sFocusedPath)
+                                If UBound($aNewPaths) > 0 And $aNewPaths[0] <> "" Then
+                                    $g_sExploreDir = $sFocusedPath
+                                    $g_aActiveBasePaths = $aNewPaths
+                                    GUICtrlSetData($g_hInputField, "")
+                                    $g_sLastQuery = "|||FORCED|||"
+                                EndIf
+                            Else
+                                $g_sSelectedPath = $sFocusedPath
+                                Return True
+                            Endif
+                        Else
+                            $g_hClickTimer = TimerInit()
+                        EndIf
+                    EndIf
+                    ExitLoop
                 EndIf
             Next
     EndSelect

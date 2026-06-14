@@ -200,3 +200,91 @@ Func _Index_SaveIndexToDisk()
         FileClose($hFile)
     EndIf
 EndFunc
+
+; ==============================================================================
+; Public API: Forces an on-demand complete recursive sweep across configured roots
+; ==============================================================================
+Func _Index_ForceReload()
+    Local $sConfigIni = "C:\$data\clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\..\clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = "clipboard-exec.ini"
+    
+    Local $aRootSections = IniReadSection($sConfigIni, "index-paths")
+    If @error Or Not IsArray($aRootSections) Then
+        _UI_ShowToast("Index Reload", "No root index-paths configured in INI.")
+        Return
+    EndIf
+    
+    $g_oIndexMap = ObjCreate("Scripting.Dictionary")
+    $g_oIndexMap.CompareMode = 1
+    
+    Local $sIgnoreDirsStr = IniRead($sConfigIni, "indexing", "ignore_dirs", "node_modules;.git;.svn;dist;.next;build")
+    Local $aIgnoreDirs = StringSplit($sIgnoreDirsStr, ";")
+    
+    Local $aQueue = ObjCreate("System.Collections.ArrayList")
+    If Not IsObj($aQueue) Then
+        _UI_ShowToast("Index Reload", "System collections array list unavailable.")
+        Return
+    EndIf
+    
+    Local $iCount = 0
+    For $i = 1 To $aRootSections[0][0]
+        Local $sRoot = StringStripWS($aRootSections[$i][1], 3)
+        if $sRoot <> "" and FileExists($sRoot) Then
+            $aQueue.Add($sRoot)
+            If Not $g_oIndexMap.Exists($sRoot) Then
+                $g_oIndexMap.Add($sRoot, 1)
+                $iCount += 1
+            EndIf
+        EndIf
+    Next
+    
+    If $iCount == 0 Then
+        _UI_ShowToast("Index Reload", "No active root index-paths exist on disk.")
+        Return
+    EndIf
+    
+    Local $iMaxItems = 5000 ; Guard safety limit
+    While $aQueue.Count > 0 And $iCount < $iMaxItems
+        Local $sCurrentDir = $aQueue.Item(0)
+        $aQueue.RemoveAt(0)
+        
+        Local $hSearch = FileFindFirstFile($sCurrentDir & "\*.*")
+        If $hSearch <> -1 Then
+            While 1
+                Local $sFileName = FileFindNextFile($hSearch)
+                If @error Then ExitLoop
+                If $sFileName == "." Or $sFileName == ".." Then ContinueLoop
+                
+                Local $sFullPath = $sCurrentDir
+                If StringRight($sFullPath, 1) <> "\" Then $sFullPath &= "\"
+                $sFullPath &= $sFileName
+                
+                Local $sAttribs = FileGetAttrib($sFullPath)
+                Local $bIsDir = StringInStr($sAttribs, "D") > 0
+                If $bIsDir Then
+                    Local $bSkip = False
+                    For $j = 1 To $aIgnoreDirs[0]
+                        If StringLower($sFileName) == StringLower($aIgnoreDirs[$j]) Then
+                            $bSkip = True
+                            ExitLoop
+                        EndIf
+                    Next
+                    If Not $bSkip And Not _Index_IsGuidPattern($sFileName) Then
+                        If Not $g_oIndexMap.Exists($sFullPath) Then
+                            $g_oIndexMap.Add($sFullPath, 1)
+                            $iCount += 1
+                            $aQueue.Add($sFullPath)
+                        EndIf
+                    EndIf
+                EndIf
+            WEnd
+            FileClose($hSearch)
+        EndIf
+    WEnd
+    
+    _Index_SaveIndexToDisk()
+    _UI_ShowToast("Index Reloaded", "Successfully crawled & saved " & $iCount & " directories to disk.")
+EndFunc
+

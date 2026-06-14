@@ -150,79 +150,51 @@ Func _Picker_Show_WinContextMenu($hWndGUI, $sWinTitle)
         Return
     EndIf
 
-    ; Create a Win32 Popup Menu
-    Local $hMenu = DllCall("user32.dll", "handle", "CreatePopupMenu")
-    If @error Or Not $hMenu[0] Then Return
-    $hMenu = $hMenu[0]
+    Local $sOpt = _Picker_ShowMiniGUI($hWndGUI, $sWinTitle)
+    If $sOpt == "Exclude Window" Or $sOpt == "Close" Or $sOpt == "Minimize" Or $sOpt == "Maximize" Or $sOpt == "Restore" Then
+        ; Rebuild match items if combined picker is active!
+        If $g_bIsCombinedPicker Then
+            _Picker_RebuildCombinedMatches($g_aActiveBasePaths)
+            _Picker_HandleQueryChange($g_aActiveBasePaths)
+        EndIf
+    EndIf
+EndFunc
+
+; ==============================================================================
+; Public API: Checks if a window is persistently excluded from harvested results
+; ==============================================================================
+Func _Picker_IsWindowExcluded($sTitle, $hWnd)
+    Local $sConfigIni = "C:\$data\clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\..\clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = "clipboard-exec.ini"
     
-    ; Define menu command IDs
-    Local $iCmdCopyInfo = 1001
-    Local $iCmdMinimize = 1002
-    Local $iCmdMaximize = 1003
-    Local $iCmdRestore = 1004
-    Local $iCmdClose = 1005
+    If IniRead($sConfigIni, "excluded-windows", "Title: " & $sTitle, "0") == "1" Then Return True
     
-    ; Append items
-    DllCall("user32.dll", "bool", "AppendMenuW", "handle", $hMenu, "uint", 0, "uint_ptr", $iCmdCopyInfo, "wstr", "Copy Info")
-    DllCall("user32.dll", "bool", "AppendMenuW", "handle", $hMenu, "uint", 0x0800, "uint_ptr", 0, "wstr", "") ; MF_SEPARATOR
-    DllCall("user32.dll", "bool", "AppendMenuW", "handle", $hMenu, "uint", 0, "uint_ptr", $iCmdMinimize, "wstr", "Minimize")
-    DllCall("user32.dll", "bool", "AppendMenuW", "handle", $hMenu, "uint", 0, "uint_ptr", $iCmdMaximize, "wstr", "Maximize")
-    DllCall("user32.dll", "bool", "AppendMenuW", "handle", $hMenu, "uint", 0, "uint_ptr", $iCmdRestore, "wstr", "Restore")
-    DllCall("user32.dll", "bool", "AppendMenuW", "handle", $hMenu, "uint", 0, "uint_ptr", $iCmdClose, "wstr", "Close")
-    
-    ; Get cursor position (screen coordinates)
-    Local $tPoint = DllStructCreate("long X;long Y;")
-    DllCall("user32.dll", "bool", "GetCursorPos", "struct*", $tPoint)
-    Local $iX = DllStructGetData($tPoint, "X")
-    Local $iY = DllStructGetData($tPoint, "Y")
-    
-    ; Track pop up menu (TPM_RETURNCMD = 0x0100)
-    Local $aRet = DllCall("user32.dll", "uint", "TrackPopupMenu", "handle", $hMenu, "uint", 0x0100, "int", $iX, "int", $iY, "int", 0, "hwnd", $hWndGUI, "ptr", 0)
-    Local $iSelectedCmd = 0
-    If Not @error And IsArray($aRet) Then
-        $iSelectedCmd = $aRet[0]
+    If $hWnd Then
+        Local $sClass = _WinAPI_GetClassName($hWnd)
+        If $sClass <> "" And IniRead($sConfigIni, "excluded-windows", "Class: " & $sClass, "0") == "1" Then Return True
+        
+        Local $iPID = WinGetProcess($hWnd)
+        If $iPID > 0 Then
+            Local $sExePath = _WinAPI_GetProcessFileName($iPID)
+            Local $sExeName = _Picker_GetBaseName($sExePath)
+            If $sExeName <> "" And IniRead($sConfigIni, "excluded-windows", "Process: " & $sExeName, "0") == "1" Then Return True
+        EndIf
     EndIf
     
-    ; Destroy menu
-    DllCall("user32.dll", "bool", "DestroyMenu", "handle", $hMenu)
-    
-    If $iSelectedCmd == 0 Then Return
-    
-    Select
-        Case $iSelectedCmd == $iCmdCopyInfo
-            Local $sStatusText = _Picker_CopyWindowInfo($sWinTitle)
-            _UI_ShowToast("Copied", $sStatusText)
-            ; Show result in Picker status bar too if it's open
-            If IsDeclared("g_hStatusText") Then GUICtrlSetData($g_hStatusText, $sStatusText)
-            
-        Case $iSelectedCmd == $iCmdMinimize
-            WinSetState($hWndTarget, "", @SW_MINIMIZE)
-            _UI_ShowToast("Window", "Window minimized: " & $sWinTitle)
-            
-        Case $iSelectedCmd == $iCmdMaximize
-            WinSetState($hWndTarget, "", @SW_MAXIMIZE)
-            _UI_ShowToast("Window", "Window maximized: " & $sWinTitle)
-            
-        Case $iSelectedCmd == $iCmdRestore
-            WinSetState($hWndTarget, "", @SW_RESTORE)
-            _UI_ShowToast("Window", "Window restored: " & $sWinTitle)
-            
-        Case $iSelectedCmd == $iCmdClose
-            WinClose($hWndTarget)
-            _UI_ShowToast("Window", "Sent close command to window: " & $sWinTitle)
-            
-    EndSelect
+    Return False
 EndFunc
 
 ; ==============================================================================
 ; Public API: Dynamically updates the text display on the toolbar element
 ; ==============================================================================
 Func _Picker_UpdateToolbarText()
-    Local $sHiddenState = "OFF"
-    If $g_bShowHidden Then $sHiddenState = "ON"
-    Local $sMinState = "OFF"
-    If $g_bShowMinimized Then $sMinState = "ON"
-    Local $sText = "  Toolbar:  Show Hidden [ " & $sHiddenState & " ] (Alt+H)    |    Show Minimized [ " & $sMinState & " ] (Alt+M)"
+    Local $sHiddenBox = "[ ]"
+    If $g_bShowHidden Then $sHiddenBox = "[x]"
+    Local $sMinBox = "[ ]"
+    If $g_bShowMinimized Then $sMinBox = "[x]"
+    Local $sText = "  Toolbar:  " & $sHiddenBox & " Show Hidden (Alt+H)      " & $sMinBox & " Show Minimized (Alt+M)      [Reload Index]"
     GUICtrlSetData($g_hToolbarText, $sText)
 EndFunc
 
@@ -249,7 +221,7 @@ Func _Picker_RebuildCombinedMatches(ByRef $aAllMatches)
         Local $sTitle = $aWinList[$i][0]
         Local $hWnd = $aWinList[$i][1]
         
-        If $sTitle <> "" And $sTitle <> "Program Manager" And $hWnd <> $g_hPickerGUI And _Util_IsOverlappedWindow($hWnd) Then
+        If $sTitle <> "" And $sTitle <> "Program Manager" And $hWnd <> $g_hPickerGUI And _Util_IsOverlappedWindow($hWnd) And Not _Picker_IsWindowExcluded($sTitle, $hWnd) Then
             Local $iState = WinGetState($hWnd)
             Local $bIsVisible = (BitAND($iState, 2) > 0)
             Local $bIsMinimized = (BitAND($iState, 16) > 0)

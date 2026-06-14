@@ -81,5 +81,7 @@ Global $g_hToolbarText = 0
 Global $g_bShowHidden = False
 Global $g_bShowMinimized = False
 Global $g_bIsCombinedPicker = False
+Global $g_iLastClickedRow = -1
+Global $g_hClickTimer = 0
 
 ; End of file: _picker_globals.au3

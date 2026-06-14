@@ -24,6 +24,7 @@
 #include "_picker_gui.au3"
 #include "_picker_event.au3"
 #include "_picker_keys.au3"
+#include "_picker_mini.au3"
 
 Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuery = "")
     Local $iRowHeight = 42, $iInputAreaHeight = 124, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
@@ -129,15 +130,31 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
                 Local $bLeftClicked = ($aCursorInfo[2] == 1)
                 
                 If $iHoveredCtrlID == $g_hToolbarText And $bLeftClicked Then
-                    If $iMouseX < 350 Then
+                    If $iMouseX < 210 Then
                         $g_bShowHidden = Not $g_bShowHidden
-                    Else
+                        _Picker_UpdateToolbarText()
+                        If $g_bIsCombinedPicker Then
+                            _Picker_RebuildCombinedMatches($aAllMatches)
+                            $g_aActiveBasePaths = $aAllMatches
+                            _Picker_HandleQueryChange($aAllMatches)
+                        EndIf
+                    ElseIf $iMouseX < 420 Then
                         $g_bShowMinimized = Not $g_bShowMinimized
-                    EndIf
-                    
-                    _Picker_UpdateToolbarText()
-                    If $g_bIsCombinedPicker Then
-                        _Picker_RebuildCombinedMatches($aAllMatches)
+                        _Picker_UpdateToolbarText()
+                        If $g_bIsCombinedPicker Then
+                            _Picker_RebuildCombinedMatches($aAllMatches)
+                            $g_aActiveBasePaths = $aAllMatches
+                            _Picker_HandleQueryChange($aAllMatches)
+                        EndIf
+                    Else
+                        ; Reload Index!
+                        _Index_ForceReload()
+                        If $g_bIsCombinedPicker Then
+                            _Picker_RebuildCombinedMatches($aAllMatches)
+                        Else
+                            $aAllMatches = _Index_LoadIndexedPaths()
+                        EndIf
+                        $g_aActiveBasePaths = $aAllMatches
                         _Picker_HandleQueryChange($aAllMatches)
                     EndIf
                     
@@ -146,12 +163,8 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
                     WEnd
                 EndIf
                 
-                If $iMouseX <> $g_iLastMouseX Or $iMouseY <> $g_iLastMouseY Or $bRightClicked Then
-                    If $iMouseX <> $g_iLastMouseX Or $iMouseY <> $g_iLastMouseY Then
-                        $g_iLastMouseX = $iMouseX
-                        $g_iLastMouseY = $iMouseY
-                    EndIf
-                    
+                ; Only select and show options menu when right clicked (hover does NOT focus row)
+                If $bRightClicked Then
                     For $i = 0 To $g_iDisplayCount - 1
                         If $iHoveredCtrlID == $g_aRowIcon[$i + 1] Or $iHoveredCtrlID == $g_aRowIdxCtrl[$i + 1] Or $iHoveredCtrlID == $g_aRowBorder[$i + 1] Or $iHoveredCtrlID == $g_aRowBg[$i + 1] Or $iHoveredCtrlID == $g_aRowPre[$i + 1] Or $iHoveredCtrlID == $g_aRowMatch[$i + 1] Or $iHoveredCtrlID == $g_aRowPost[$i + 1] Or $iHoveredCtrlID == $g_aRowPath[$i + 1] Or $iHoveredCtrlID == $g_aRowDepthInfo[$i + 1] Then
                             If $i <> $g_iSelectedIndex Then
@@ -164,20 +177,17 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
                                 _Picker_UpdateStatusText($g_hStatusText, $g_hStatusBg, $g_aFilteredPaths, $g_iSelectedIndex, $g_iScrollOffset, $g_bExploreMode, $g_sExploreDir, UBound($g_aFilteredPaths) - $g_iRecentCount, $g_iRecentCount)
                             EndIf
                             
-                            If $bRightClicked Then
-                                Local $sRightClickPath = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
-                                If StringInStr($sRightClickPath, " [window") > 0 Then
-                                    Local $sRightClickWin = StringRegExpReplace($sRightClickPath, "(?i)\s+\[window(?::[^\]]+)?\]\s*$", "")
-                                    
-                                    ; Release button protection
-                                    While GUIGetCursorInfo($g_hPickerGUI)[3] == 1
-                                        Sleep(10)
-                                    WEnd
-                                    
-                                    _Picker_Show_WinContextMenu($g_hPickerGUI, $sRightClickWin)
-                                EndIf
+                            Local $sRightClickPath = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
+                            If StringInStr($sRightClickPath, " [window") > 0 Then
+                                Local $sRightClickWin = StringRegExpReplace($sRightClickPath, "(?i)\s+\[window(?::[^\]]+)?\]\s*$", "")
+                                
+                                ; Release button protection
+                                While GUIGetCursorInfo($g_hPickerGUI)[3] == 1
+                                    Sleep(10)
+                                WEnd
+                                
+                                _Picker_Show_WinContextMenu($g_hPickerGUI, $sRightClickWin)
                             EndIf
-                            
                             ExitLoop
                         EndIf
                     Next

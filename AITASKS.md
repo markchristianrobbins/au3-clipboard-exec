@@ -90,6 +90,22 @@
 - [x] Integrate production-ready Search Picker with real index file loading
     - Reconfigured the interactive Search Picker to load directly from the crawled system indices and route selection entries directly to Directory Opus.
 
+## [x] Recent Session Changes (Context Menu Mini-Picker & Click Improvements)
+- [x] Add Reload Index button to toolbar
+    - Added "[Reload Index]" text block on the toolbar, handled click, and wired it to `_Index_ForceReload()`.
+- [x] Ensure directories are included in combined picker results
+    - Corrected `$g_aActiveBasePaths` sync issue inside `_picker.au3` when rebuilding combined matches or reloading, resolving the missing directories bug.
+- [x] Prevent hover from focusing items
+    - Disabled automatic focused indexing when hovering with the cursor.
+- [x] Click to focus & double click to accept
+    - Refactored click to select/focus rows, and double-click to run/accept them or navigate.
+- [x] Replace context popup menus with miniature option search picker
+    - Refactored `_Picker_Show_WinContextMenu` to spawn a custom-coded block-free searchable miniature picker with options: Copy Info, Minimize, Maximize, Restore, Close, Exclude Window.
+- [x] Permanent window exclusions from INI
+    - Configured "Exclude Window" to persistently match and bypass titles, classes, and process executables from harvested outcomes.
+- [x] Checkbox-style toolbar options
+    - Replaced the text on the toolbar with interactive checkmarks matching `[x]` (enabled) and `[ ]` (disabled).
+
 ## [ ] New Settings
 - [ ] `sendkeys` under `[Cursor]` profile
     - Value: `"{HOME}+{END}^c"` (controls editor string selection macros).

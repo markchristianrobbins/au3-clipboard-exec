@@ -15,16 +15,47 @@
 
 ## Commit Message
 ```text
-feat: add layout-aligned toolbar above status bar with Alt+H/Alt+M active filters, bypass indents for windows, bind Apps key to context menu
+feat: replace context win32 menu with searchable mini-picker, add Reload Index button, make toolbar checkboxes, fix mouse hover, and integrate permanent excludes
 
-- Created a layout-aligned status toolbar to display and toggle filter states for hidden and minimized windows.
-- Solved layout shift by adjusting general list math parameters to accommodate a 124px input area size safely.
-- Connected the "Apps" key accelerator in tandem with WM_CONTEXTMENU Win32 callbacks to trigger native context popups.
-- Cleared window component row styling indent offsets so that windows remain vertically aligned.
-- Fixed directory visibility on combined picker queries by setting the combined state tracking flags cleanly on execution triggers.
+- Created a layout-aligned, block-free searchable miniature options picker for window items (Copy Info, Minimize, Maximize, Restore, Close, Exclude Window).
+- Added "[Reload Index]" text button on the status toolbar and wired it to forced recursive index cralwer `_Index_ForceReload()`.
+- Ensured directories are included in `Win+Ctrl+Alt+Enter` results by fixing the `$g_aActiveBasePaths` synchronization bug.
+- Prevented mouse hover from shifting focus or selected indexing.
+- Re-routed selection to single click to focus and double click to run/navigate.
+- Configured "Exclude Window" to persistently write title, class, and process values to clipboard-exec.ini to filter matching outcomes forever.
+- Replaced the toolbar status bar layout with high-contrast clickable checkmark icons [x] and [ ].
 ```
 
 ## Log Entries
+
+## [2026-06-14T20:30:00Z]
+### 🎯 Primary Goals & Requirements
+- Support manual full-crawling of local indexed assets via a clickable on-demand "Reload Index" button.
+- Make toolbar filter choices visually resemble checkboxes (e.g. using `[x]` and `[ ]` layouts).
+- Eliminate hover-based focus shifting so that the select bar stays on clicked or keyboard navigated items.
+- Capture single click to focus a row, and double click to select or explore directories.
+- Swap standard Win32 popup menus with a beautiful, custom, searchable miniature picker window.
+- Persist window exclusions permanently in `clipboard-exec.ini` by classifying exact titles, window classes, and process executables.
+- Resolve missing combined directories listings on combined picker queries.
+
+### 🛠️ Completed Changes in this Session
+- **Recursive Index Sweeper (`_Index_ForceReload`)**: Added a highly performance-crawled complete scan procedure inside `/modules/_index.au3` to update `$g_oIndexMap` and write coordinates directly to index.txt.
+- **Checkbox-Style Toggles Toolbar**: Updated `/modules/_picker_helpers.au3` to output `[x]` for enabled states and `[ ]` for disabled choices, adding mouse X testing boundaries to intercept clicks.
+- **Combined Matches Visibility Recovery**: Corrected `$g_aActiveBasePaths` alignment inside `/modules/_picker.au3` when toggling filters or triggering index reloads, restoring full directories visibility.
+- **Prevented Selection Shifting on Hover**: Erased mouse movement listeners from shifting the select coordinate. Hovering now does not steal focus, keeping work states secure.
+- **Click to Focus & Double-Click Enter**: Refactored row control interceptions inside `_Picker_ProcessMsg` in `/modules/_picker_event.au3` to change selection index on single click, and run the active routine or navigate down paths on double click.
+- **Searchable Mini Options Picker GUI**: Formulated `/modules/_picker_mini.au3` containing a brand new, highly responsive, compact searchable GUI matching the theme styles perfectly to present, search, and run standard window actions.
+- **Permanent Window Exclusion Filters**: Injected `_Picker_IsWindowExcluded` looking up `[excluded-windows]` records inside the INI to filter out processes, classes, or exact titles from harvested visible results permanently.
+
+### 🔸 Affected Files
+- `/modules/_index.au3`
+- `/modules/_picker.au3`
+- `/modules/_picker_globals.au3`
+- `/modules/_picker_helpers.au3`
+- `/modules/_picker_event.au3`
+- `/modules/_picker_mini.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
 
 ## [2026-06-14T20:12:00Z]
 ### 🎯 Primary Goals & Requirements

@@ -6,7 +6,7 @@
 #include "_recognizer.au3"
 #include "_handler_dopus.au3"
 #include "_handler_zdot.au3"
-#include "_handler_cmd.au3" ; <--- CRITICAL FIX: Loaded missing cmd sub-module reference link
+#include "_handler_cmd.au3"
 #include "_utils.au3"
 
 ; ==============================================================================
@@ -26,27 +26,14 @@ Func _Hotkey_ContextOp()
     
     Local $hWndTarget = WinGetHandle("[ACTIVE]")
 
-    ; Execute our safe window profiling engine
-    Local $aAppProfile = _Config_GetActiveAppProfile()
-    If @error Then
-        Local $sErrMsg = "Context Error: Active window does not match tracking configurations."
-        ClipPut($sErrMsg)
-        _UI_ShowToast("Context Error", $sErrMsg)
-        Return
-    EndIf
-
-    ; Correct array indexing alignment parameters
-    Local $sName   = $aAppProfile ; Cell 0 = Profile section name
-    Local $sKeys   = $aAppProfile ; Cell 1 = sendkeys string sequence macro
-    Local $sScript = $aAppProfile ; Cell 2 = custom external helper paths
+    ; CRITICAL FIX: Read the SendKeys macro directly as a flat string variable (Bypasses array index bugs)
+    Local $sCleanKeys = StringStripWS(_Config_GetActiveAppProfile(), 3)
 
     ; Clear clipboard before running macros to ensure fresh verification loops
     ClipPut("") 
     Sleep(30)
 
-    If $sKeys <> "" Then
-        Local $sCleanKeys = StringStripWS($sKeys, 3)
-        
+    If $sCleanKeys <> "" Then
         ; Release physical modifier keys completely before typing to fix injection errors
         _Util_WaitForModifierRelease()
         _Util_PurgeStuckModifiers()
@@ -56,7 +43,7 @@ Func _Hotkey_ContextOp()
         WinWaitActive($hWndTarget, "", 1)
         Sleep(50)
 
-        ; Send macro layout keys natively straight down focused global thread
+        ; Send macro layout keys natively straight down the focused global thread
         Send($sCleanKeys)
         
         ; Verification loop waiting for clipboard to catch text data
@@ -79,9 +66,6 @@ Func _Hotkey_ContextOp()
             _UI_ShowToast("Pipeline Error", $sPipelineError)
             Return
         EndIf
-    ElseIf $sScript <> "" Then 
-        Local $iPID = Run('"' & @AutoItExe & '" "' & $sScript & '"')
-        ProcessWaitClose($iPID, 3)
     EndIf
     
     _Hotkey_ClipOp()
@@ -116,7 +100,6 @@ Func _Hotkey_ClipOp()
             _Handler_ResolveZdot($sFinalPayload)
 
         Case $sType = "DOS_CMD"
-            ; CRITICAL FIX: Route strings beginning with '>' straight to hidden runtime console process
             _Handler_ExecuteDOSCommand($sFinalPayload)
 
         Case Default

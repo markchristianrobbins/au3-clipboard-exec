@@ -1,167 +1,142 @@
 #include-once
+; ==============================================================================
+; File: _picker.au3
+; Description: Main entry point for the Search Picker GUI.
+; Functions:
+;   - _Picker_ShowGUI (Creates, manages, and returns from the primary picker GUI loop)
+; ==============================================================================
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #include <EditConstants.au3>
 #include <StaticConstants.au3>
+#include <StringConstants.au3>
+#include <Array.au3>
 
-; CRITICAL INCLUDE LINK MAP
+; Sub-file dependencies
+#include "_picker_globals.au3"
+#include "_picker_helpers.au3"
+#include "_picker_icons.au3"
+#include "_picker_style.au3"
+#include "_picker_recent.au3"
+#include "_picker_filter.au3"
 #include "_picker_render.au3"
+#include "_picker_gui.au3"
+#include "_picker_event.au3"
+#include "_picker_keys.au3"
 
-; ==============================================================================
-; Public API: Displays an elegant, VS-Code themed selection picker GUI panel
-; ==============================================================================
-Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER SELECTION NAVIGATOR", $sSearchQuery = "")
-    Local $iRowHeight = 42, $iInputAreaHeight = 104, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15
-    Local $iMaxDisplayRows = 36, $iMaxFitRows = Int((@DesktopHeight - $iInputAreaHeight - 80) / $iRowHeight)
+Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuery = "")
+    Local $iRowHeight = 42, $iInputAreaHeight = 104, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
+    Local $iMaxFitRows = Int((@DesktopHeight - $iInputAreaHeight - 80) / $iRowHeight)
     If $iMaxDisplayRows > $iMaxFitRows Then $iMaxDisplayRows = $iMaxFitRows
-    If $iMaxDisplayRows < 5 Then $iMaxDisplayRows = 5 
+    If $iMaxDisplayRows < 5 Then $iMaxDisplayRows = 5
+    
+    If Not IsObj($oChildCount) Or Not IsObj($oGrandchildCount) Then _Picker_BuildChildCounts($aAllMatches)
     
     Local $iMaxMenuHeight = $iInputAreaHeight + 8 + ($iMaxDisplayRows * $iRowHeight) + 12
     Local $iCenterX = (@DesktopWidth - $iMenuWidth) / 2, $iCenterY = (@DesktopHeight - $iMaxMenuHeight) / 2
-
-    Local $hPickerGUI = GUICreate("", $iMenuWidth, $iMaxMenuHeight, $iCenterX, $iCenterY, $WS_POPUP, BitOR($WS_EX_TOPMOST, $WS_EX_TOOLWINDOW))
-    GUISetBkColor(0x1E1E1E, $hPickerGUI)
-
-    Local $hBorderL = GUICtrlCreateLabel("", 0, 0, 1, $iMaxMenuHeight)
-    GUICtrlSetBkColor($hBorderL, 0x007ACC)
-    Local $hBorderR = GUICtrlCreateLabel("", $iMenuWidth - 1, 0, 1, $iMaxMenuHeight)
-    GUICtrlSetBkColor($hBorderR, 0x007ACC)
-    Local $hBorderT = GUICtrlCreateLabel("", 0, 0, $iMenuWidth, 1)
-    GUICtrlSetBkColor($hBorderT, 0x007ACC)
-    Local $hBorderB = GUICtrlCreateLabel("", 0, $iMaxMenuHeight - 1, $iMenuWidth, 1)
-    GUICtrlSetBkColor($hBorderB, 0x007ACC)
-
-    Local $hTitleText = GUICtrlCreateLabel("  " & StringUpper($sTitle), 20, 14, $iMenuWidth - 40, 18)
-    GUICtrlSetFont($hTitleText, 9, 700, 0, "Segoe UI")
-    GUICtrlSetColor($hTitleText, 0x007ACC)
     
-    Local $hStatusBg = GUICtrlCreateLabel("", 15, 34, $iMenuWidth - 30, 20)
-    GUICtrlSetBkColor($hStatusBg, 0x1A1A1A)
-    Local $hStatusText = GUICtrlCreateLabel("", 20, 36, $iMenuWidth - 40, 16)
-    GUICtrlSetFont($hStatusText, 8, 400, 0, "Segoe UI")
-    GUICtrlSetColor($hStatusText, 0x888888)
-
-    Local $hInputField = GUICtrlCreateInput($sSearchQuery, 25, 64, $iMenuWidth - 50, 24, $ES_AUTOHSCROLL)
-    GUICtrlSetFont($hInputField, 11, 400, 0, "Segoe UI")
-    GUICtrlSetColor($hInputField, 0xFFFFFF)
-    GUICtrlSetBkColor($hInputField, 0x252526)
-
-    Local $aRowIdxCtrl[$iMaxDisplayRows + 1], $aRowBorder[$iMaxDisplayRows + 1]
-    Local $aRowBg[$iMaxDisplayRows + 1], $aRowPre[$iMaxDisplayRows + 1]
-    Local $aRowPath[$iMaxDisplayRows + 1], $aRowDepthInfo[$iMaxDisplayRows + 1]
-
-    For $i = 0 To $iMaxDisplayRows - 1
-        Local $iTopPos = $iInputAreaHeight + 8 + ($i * $iRowHeight)
-        $aRowBorder[$i + 1] = GUICtrlCreateLabel("", $iRowX, $iTopPos, $iRowWidth, 38)
-        GUICtrlSetState(-1, $GUI_HIDE)
-        $aRowBg[$i + 1] = GUICtrlCreateLabel("", $iRowX + 1, $iTopPos + 1, $iRowWidth - 2, 36, BitOR($SS_LEFT, $SS_CENTERIMAGE))
-        GUICtrlSetCursor(-1, 0)
-        GUICtrlSetState(-1, $GUI_HIDE)
-        $aRowIdxCtrl[$i + 1] = GUICtrlCreateLabel("", $iRowX + 4, $iTopPos + 12, 22, 14, $SS_RIGHT)
-        GUICtrlSetFont(-1, 8, 400, 0, "Segoe UI")
-        GUICtrlSetColor(-1, 0x555555)
-        GUICtrlSetState(-1, $GUI_HIDE)
-        $aRowPre[$i + 1] = GUICtrlCreateLabel("", $iRowX + 54, $iTopPos + 3, 1, 18)
-        GUICtrlSetFont(-1, 10, 400, 0, "Segoe UI") 
-        GUICtrlSetState(-1, $GUI_HIDE)
-        $aRowPath[$i + 1] = GUICtrlCreateLabel("", $iRowX + 54, $iTopPos + 21, $iRowWidth - 70, 15, $SS_LEFT)
-        GUICtrlSetFont(-1, 8, 400, 0, "Segoe UI")
-        GUICtrlSetState(-1, $GUI_HIDE)
-        $aRowDepthInfo[$i + 1] = GUICtrlCreateLabel("", $iRowX + $iRowWidth - 140, $iTopPos + 5, 120, 16, $SS_RIGHT)
-        GUICtrlSetFont(-1, 8, 400, 0, "Segoe UI")
-        GUICtrlSetColor(-1, 0x555555)
-        GUICtrlSetState(-1, $GUI_HIDE)
-    Next
-
-    Local $hRowFocusL = GUICtrlCreateLabel("", 0, 0, 1, 1)
-    Local $hRowFocusR = GUICtrlCreateLabel("", 0, 0, 1, 1)
-    Local $hRowFocusT = GUICtrlCreateLabel("", 0, 0, 1, 1)
-    Local $hRowFocusB = GUICtrlCreateLabel("", 0, 0, 1, 1)
-    GUICtrlSetState($hRowFocusL, $GUI_HIDE)
-    GUICtrlSetState($hRowFocusR, $GUI_HIDE)
-    GUICtrlSetState($hRowFocusT, $GUI_HIDE)
-    GUICtrlSetState($hRowFocusB, $GUI_HIDE)
-
-    Local $hNoResults = GUICtrlCreateLabel("No matching entries found inside data registers", $iRowX, $iInputAreaHeight + 14, $iRowWidth, 36, BitOR($SS_CENTER, $SS_CENTERIMAGE))
-    GUICtrlSetFont($hNoResults, 10, 400, 2, "Segoe UI")
-    GUICtrlSetColor($hNoResults, 0x888888)
-    GUICtrlSetState($hNoResults, $GUI_HIDE)
-
-    Local $aFilteredPaths = $aAllMatches, $iDisplayCount = (UBound($aAllMatches) < $iMaxDisplayRows) ? UBound($aAllMatches) : $iMaxDisplayRows
-    Local $iSelectedIndex = 0, $iScrollOffset = 0, $sLastQuery = "|||"
-
-    Local $hDummyUp = GUICtrlCreateDummy(), $hDummyDown = GUICtrlCreateDummy(), $hDummyEscape = GUICtrlCreateDummy(), $hDummyEnter = GUICtrlCreateDummy()
-    Local $aAccelTable = [["{DOWN}", $hDummyDown], ["{UP}", $hDummyUp], ["{ESC}", $hDummyEscape], ["{ENTER}", $hDummyEnter]]
-    GUISetAccelerators($aAccelTable, $hPickerGUI)
-
-    GUISetState(@SW_SHOW, $hPickerGUI)
-    WinActivate($hPickerGUI)
-    ControlFocus($hPickerGUI, "", $hInputField)
-
-    Local $sSelectedPath = "", $bHasBeenActive = False, $hTimer = TimerInit()
-
+    $g_hPickerGUI = _Picker_GUICreateWindow($iMenuWidth, $iMaxMenuHeight, $iCenterX, $iCenterY, $sTitle, $sSearchQuery)
+    _Picker_GUICreateBorders($g_hPickerGUI, $iMenuWidth, $iMaxMenuHeight, $g_hBorderL, $g_hBorderR, $g_hBorderT, $g_hBorderB)
+    
+    Local $hTitleBg, $hTitleText
+    _Picker_GUICreateTitleAndStatus($iMenuWidth, $sTitle, $hTitleBg, $hTitleText, $g_hStatusBg, $g_hStatusText)
+    
+    Local $hInputBg, $hDivider
+    _Picker_GUICreateInputField($iMenuWidth, $sSearchQuery, $hInputBg, $g_hInputField, $hDivider)
+    
+    Dim $g_aRowIcon[$iMaxDisplayRows + 1], $g_aRowIdxCtrl[$iMaxDisplayRows + 1], $g_aRowBorder[$iMaxDisplayRows + 1]
+    Dim $g_aRowBg[$iMaxDisplayRows + 1], $g_aRowPre[$iMaxDisplayRows + 1], $g_aRowMatch[$iMaxDisplayRows + 1]
+    Dim $g_aRowPost[$iMaxDisplayRows + 1], $g_aRowPath[$iMaxDisplayRows + 1], $g_aRowDepthInfo[$iMaxDisplayRows + 1]
+    _Picker_GUICreateRowPool($iMaxDisplayRows, $iInputAreaHeight, $iRowHeight, $iRowX, $iRowWidth, $g_aRowIcon, $g_aRowIdxCtrl, $g_aRowBorder, $g_aRowBg, $g_aRowPre, $g_aRowMatch, $g_aRowPost, $g_aRowPath, $g_aRowDepthInfo)
+    
+    $g_hRowFocusL = GUICtrlCreateLabel("", 0, 0, 1, 1)
+    $g_hRowFocusR = GUICtrlCreateLabel("", 0, 0, 1, 1)
+    $g_hRowFocusT = GUICtrlCreateLabel("", 0, 0, 1, 1)
+    $g_hRowFocusB = GUICtrlCreateLabel("", 0, 0, 1, 1)
+    
+    $g_hNoResults = GUICtrlCreateLabel("No matching directories found in index map", $iRowX, $iInputAreaHeight + 14, $iRowWidth, 36, BitOR($SS_CENTER, $SS_CENTERIMAGE))
+    GUICtrlSetFont($g_hNoResults, 10, 400, 2, "Segoe UI")
+    GUICtrlSetColor($g_hNoResults, 0x888888)
+    GUICtrlSetBkColor($g_hNoResults, $GUI_BKCOLOR_TRANSPARENT)
+    GUICtrlSetState($g_hNoResults, $GUI_HIDE)
+    GUICtrlSetResizing($g_hNoResults, $GUI_DOCKALL)
+    
+    _Picker_GUISetUpAccelerators($g_hPickerGUI, $g_hDUp, $g_hDDown, $g_hDPgUp, $g_hDPgDn, $g_hDHome, $g_hDEnd, $g_hDEnter, $g_hDCtrlEnter, $g_hDEscape, $g_hDCopy, $g_hDBackspace, $g_hDCtrlBS)
+    
+    GUISetState(@SW_SHOW, $g_hPickerGUI)
+    WinActivate($g_hPickerGUI)
+    ControlFocus($g_hPickerGUI, "", $g_hInputField)
+    
+    $g_sSelectedPath = ""
+    $g_bHasBeenActive = False
+    $g_sLastQuery = "|||"
+    $g_iLastMouseX = -1
+    $g_iLastMouseY = -1
+    $g_aFilteredPaths = [""]
+    $g_iDisplayCount = 0
+    $g_iSelectedIndex = 0
+    $g_iScrollOffset = 0
+    $g_iRecentCount = 0
+    $g_bExploreMode = False
+    $g_sExploreDir = ""
+    $g_aActiveBasePaths = $aAllMatches
+    $g_bRestoringState = False
+    $g_sSavedQueryText = ""
+    $g_iSavedSelectedIndex = 0
+    $g_iSavedScrollOffset = 0
+    Local $hTimer = TimerInit()
+    
     While 1
         Local $iMsg = GUIGetMsg()
-        If $iMsg == $GUI_EVENT_CLOSE Or $iMsg == $hDummyEscape Then ExitLoop
+        If $iMsg == $GUI_EVENT_CLOSE Then ExitLoop
         
-        Local $bIsActive = (WinActive($hPickerGUI) <> 0)
-        If $bIsActive Then
-            If Not $bHasBeenActive Then $bHasBeenActive = True
+        Local $bActive = (WinActive($g_hPickerGUI) <> 0)
+        If $bActive Then
+            If Not $g_bHasBeenActive Then $g_bHasBeenActive = True
         Else
-            If $bHasBeenActive Or TimerDiff($hTimer) > 3000 Then ExitLoop
+            If $g_bHasBeenActive Or TimerDiff($hTimer) > 3000 Then ExitLoop
         EndIf
-
-        Local $sCurrentQuery = GUICtrlRead($hInputField)
-        If $sCurrentQuery <> $sLastQuery Then
-            $sLastQuery = $sCurrentQuery
-            $aFilteredPaths = $aAllMatches
-            $iDisplayCount = (UBound($aFilteredPaths) < $iMaxDisplayRows) ? UBound($aFilteredPaths) : $iMaxDisplayRows
-            $iSelectedIndex = 0
-            $iScrollOffset = 0
-
-            Local $iNewHeight = 0
-            If $iDisplayCount == 0 Then
-                GUICtrlSetState($hNoResults, $GUI_SHOW)
-                _Picker_UpdateFocusBorder($hRowFocusL, $hRowFocusR, $hRowFocusT, $hRowFocusB, 0, 0, 0, 0, False)
-                $iNewHeight = $iInputAreaHeight + 64
-            Else
-                GUICtrlSetState($hNoResults, $GUI_HIDE)
-                _Picker_RenderVisibleList($aRowIdxCtrl, $aRowBorder, $aRowBg, $aRowPre, $aRowPath, $aRowDepthInfo, $aFilteredPaths, $sCurrentQuery, $iDisplayCount, $iSelectedIndex, $iScrollOffset, $iMaxDisplayRows)
-                Local $iActiveTop = $iInputAreaHeight + 8 + ($iSelectedIndex * $iRowHeight)
-                _Picker_UpdateFocusBorder($hRowFocusL, $hRowFocusR, $hRowFocusT, $hRowFocusB, $iRowX, $iActiveTop, $iRowWidth, 0x007ACC, True)
-                $iNewHeight = $iInputAreaHeight + 8 + ($iDisplayCount * $iRowHeight) + 12
+        
+        Local $sCurrentQuery = GUICtrlRead($g_hInputField)
+        If $sCurrentQuery <> $g_sLastQuery Then _Picker_HandleQueryChange($aAllMatches)
+        
+        If $g_iDisplayCount > 0 Then
+            Local $aCursorInfo = GUIGetCursorInfo($g_hPickerGUI)
+            If IsArray($aCursorInfo) Then
+                Local $iHoveredCtrlID = $aCursorInfo[4], $iMouseX = $aCursorInfo[0], $iMouseY = $aCursorInfo[1]
+                If $iMouseX <> $g_iLastMouseX Or $iMouseY <> $g_iLastMouseY Then
+                    $g_iLastMouseX = $iMouseX
+                    $g_iLastMouseY = $iMouseY
+                    For $i = 0 To $g_iDisplayCount - 1
+                        If $iHoveredCtrlID == $g_aRowIcon[$i + 1] Or $iHoveredCtrlID == $g_aRowIdxCtrl[$i + 1] Or $iHoveredCtrlID == $g_aRowBorder[$i + 1] Or $iHoveredCtrlID == $g_aRowBg[$i + 1] Or $iHoveredCtrlID == $g_aRowPre[$i + 1] Or $iHoveredCtrlID == $g_aRowMatch[$i + 1] Or $iHoveredCtrlID == $g_aRowPost[$i + 1] Or $iHoveredCtrlID == $g_aRowPath[$i + 1] Or $iHoveredCtrlID == $g_aRowDepthInfo[$i + 1] Then
+                            If $i <> $g_iSelectedIndex Then
+                                _Picker_HighlightRowDynamic($g_aRowIcon, $g_aRowIdxCtrl, $g_aRowBorder, $g_aRowBg, $g_aRowPre, $g_aRowMatch, $g_aRowPost, $g_aRowPath, $g_aRowDepthInfo, $g_aFilteredPaths, $sCurrentQuery, $g_iSelectedIndex, $g_iScrollOffset + $g_iSelectedIndex, False, ($g_iScrollOffset + $g_iSelectedIndex < $g_iRecentCount), $g_bExploreMode, $g_sExploreDir, $iInputAreaHeight)
+                                $g_iSelectedIndex = $i
+                                _Picker_HighlightRowDynamic($g_aRowIcon, $g_aRowIdxCtrl, $g_aRowBorder, $g_aRowBg, $g_aRowPre, $g_aRowMatch, $g_aRowPost, $g_aRowPath, $g_aRowDepthInfo, $g_aFilteredPaths, $sCurrentQuery, $g_iSelectedIndex, $g_iScrollOffset + $g_iSelectedIndex, True, ($g_iScrollOffset + $g_iSelectedIndex < $g_iRecentCount), $g_bExploreMode, $g_sExploreDir, $iInputAreaHeight)
+                                Local $iActiveTop = $iInputAreaHeight + 8 + ($g_iSelectedIndex * $iRowHeight)
+                                Local $iSpecColor = _Picker_GetBaseColor(_Picker_GetBaseName($g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]))
+                                _Picker_UpdateFocusBorder($g_hRowFocusL, $g_hRowFocusR, $g_hRowFocusT, $g_hRowFocusB, $iRowX, $iActiveTop, $iRowWidth, $iSpecColor, True)
+                                _Picker_UpdateStatusText($g_hStatusText, $g_hStatusBg, $g_aFilteredPaths, $g_iSelectedIndex, $g_iScrollOffset, $g_bExploreMode, $g_sExploreDir, UBound($g_aFilteredPaths) - $g_iRecentCount, $g_iRecentCount)
+                            EndIf
+                            ExitLoop
+                        EndIf
+                    Next
+                EndIf
             EndIf
-            
-            GUICtrlSetPos($hBorderL, 0, 0, 1, $iNewHeight)
-            GUICtrlSetPos($hBorderR, $iMenuWidth - 1, 0, 1, $iNewHeight)
-            GUICtrlSetPos($hBorderB, 0, $iNewHeight - 1, $iMenuWidth, 1)
-            WinMove($hPickerGUI, "", $iCenterX, $iCenterY, $iMenuWidth, $iNewHeight)
         EndIf
-
-        Select
-            Case $iMsg == $hDummyDown And $iDisplayCount > 0
-                If $iSelectedIndex < $iDisplayCount - 1 Then
-                    $iSelectedIndex += 1
-                    _Picker_RenderVisibleList($aRowIdxCtrl, $aRowBorder, $aRowBg, $aRowPre, $aRowPath, $aRowDepthInfo, $aFilteredPaths, $sCurrentQuery, $iDisplayCount, $iSelectedIndex, $iScrollOffset, $iMaxDisplayRows)
-                    Local $iActiveTop = $iInputAreaHeight + 8 + ($iSelectedIndex * $iRowHeight)
-                    _Picker_UpdateFocusBorder($hRowFocusL, $hRowFocusR, $hRowFocusT, $hRowFocusB, $iRowX, $iActiveTop, $iRowWidth, 0x007ACC, True)
-                EndIf
-            Case $iMsg == $hDummyUp And $iDisplayCount > 0
-                If $iSelectedIndex > 0 Then
-                    $iSelectedIndex -= 1
-                    _Picker_RenderVisibleList($aRowIdxCtrl, $aRowBorder, $aRowBg, $aRowPre, $aRowPath, $aRowDepthInfo, $aFilteredPaths, $sCurrentQuery, $iDisplayCount, $iSelectedIndex, $iScrollOffset, $iMaxDisplayRows)
-                    Local $iActiveTop = $iInputAreaHeight + 8 + ($iSelectedIndex * $iRowHeight)
-                    _Picker_UpdateFocusBorder($hRowFocusL, $hRowFocusR, $hRowFocusT, $hRowFocusB, $iRowX, $iActiveTop, $iRowWidth, 0x007ACC, True)
-                EndIf
-            Case $iMsg == $hDummyEnter And $iDisplayCount > 0
-                $sSelectedPath = $aFilteredPaths[$iScrollOffset + $iSelectedIndex]
-                ExitLoop
-        EndSelect
+        
+        If _Picker_ProcessMsg($iMsg, $aAllMatches) Then ExitLoop
+        
+        If $iMsg == $g_hDDown Or $iMsg == $g_hDUp Or $iMsg == $g_hDPgUp Or $iMsg == $g_hDPgDn Or $iMsg == $g_hDHome Or $iMsg == $g_hDEnd Then
+            _Picker_UpdateStatusText($g_hStatusText, $g_hStatusBg, $g_aFilteredPaths, $g_iSelectedIndex, $g_iScrollOffset, $g_bExploreMode, $g_sExploreDir, UBound($g_aFilteredPaths) - $g_iRecentCount, $g_iRecentCount)
+        EndIf
+        
         Sleep(10)
     WEnd
-
-    GUIDelete($hPickerGUI)
-    Return $sSelectedPath
+    
+    If $g_sSelectedPath <> "" Then _Picker_AddRecent($g_sSelectedPath)
+    GUIDelete($g_hPickerGUI)
+    Return $g_sSelectedPath
 EndFunc
 
-; modules\_picker.au3
+; End of file: _picker.au3

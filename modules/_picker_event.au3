@@ -1,10 +1,8 @@
 #include-once
 ; ==============================================================================
 ; File: _picker_event.au3
+; Paths: C:\_\au3-clipboard-exec\modules\_picker_event.au3
 ; Description: Handles events, query changes, and messages within the GUI loop.
-; Functions:
-;   - _Picker_HandleQueryChange (Updates list view based on any changes to the search input box)
-;   - _Picker_ProcessMsg (Processes events like Enter, Ctrl+Enter, Esc, and clicks)
 ; ==============================================================================
 #include <GUIConstantsEx.au3>
 #include "_picker_globals.au3"
@@ -24,6 +22,8 @@ Func _Picker_HandleQueryChange(ByRef $aAllMatches)
     
     Local $aRecentPaths = _Picker_LoadRecents()
     $g_iRecentCount = 0
+    
+    ; CRITICAL FIX: Explicitly sizing the array to 5 items *before* writing to it via subscript index
     Local $aActualRecents[5]
     For $i = 0 To UBound($aRecentPaths) - 1
         If $aRecentPaths[$i] <> "" Then
@@ -37,7 +37,10 @@ Func _Picker_HandleQueryChange(ByRef $aAllMatches)
     Local $aSearchMatches = _Picker_FilterPathsByFuzzyScore($g_aActiveBasePaths, $sCurrentQuery)
     If $sCurrentQuery <> "" And UBound($aSearchMatches) <= 3000 Then _Picker_SortPathsByLevelAndAlphabet($aSearchMatches)
     
-    Local $iMaxSearchSize = UBound($aSearchMatches), $aCombined[$iMaxSearchSize + $g_iRecentCount], $iCombIdx = 0
+    Local $iMaxSearchSize = UBound($aSearchMatches)
+    Local $aCombined[$iMaxSearchSize + $g_iRecentCount]
+    Local $iCombIdx = 0
+    
     For $i = 0 To $g_iRecentCount - 1
         $aCombined[$iCombIdx] = $aActualRecents[$i]
         $iCombIdx += 1
@@ -66,7 +69,12 @@ Func _Picker_HandleQueryChange(ByRef $aAllMatches)
         ReDim $aCombined[$iCombIdx]
         $g_aFilteredPaths = $aCombined
         $g_iDisplayCount = ($iCombIdx < $iMaxDisplayRows) ? $iCombIdx : $iMaxDisplayRows
-        If UBound($g_aFilteredPaths) <= 3000 Then _Picker_BuildChildCounts($g_aFilteredPaths)
+        If UBound($g_aFilteredPaths) <= 3000 Then
+            _Picker_BuildChildCounts($g_aFilteredPaths)
+        Else
+            If IsObj($oChildCount) Then $oChildCount.RemoveAll()
+            If IsObj($oGrandchildCount) Then $oGrandchildCount.RemoveAll()
+        EndIf
     EndIf
     
     If $g_bRestoringState Then
@@ -103,7 +111,9 @@ Func _Picker_HandleQueryChange(ByRef $aAllMatches)
     Local $iCenterY = (@DesktopHeight - $iNewHeight) / 2
     WinMove($g_hPickerGUI, "", $iCenterX, $iCenterY, $iMenuWidth, $iNewHeight)
 EndFunc
+; MORE...
 
+; End of file: _picker_event.au3 (Part 1)
 Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
     Local $iRowHeight = 42, $iInputAreaHeight = 104, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
     
@@ -113,6 +123,7 @@ Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
                 Local $sFocusedPath = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
                 If $g_bExploreMode Then
                     Local $aNewPaths = _Picker_GetDescendants($aAllMatches, $sFocusedPath)
+                    ; FIXED: Targeted explicit cell evaluation index to resolve runtime array casting crash
                     If UBound($aNewPaths) > 0 And $aNewPaths[0] <> "" Then
                         $g_sExploreDir = $sFocusedPath
                         $g_aActiveBasePaths = $aNewPaths

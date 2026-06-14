@@ -32,17 +32,29 @@ Func _Picker_HueToRGB($fHue)
     
     Switch $fI
         Case 0, 6
-            $fR = 1; $fG = $fF; $fB = 0
+            $fR = 1
+            $fG = $fF
+            $fB = 0
         Case 1
-            $fR = $fQ; $fG = 1; $fB = 0
+            $fR = $fQ
+            $fG = 1
+            $fB = 0
         Case 2
-            $fR = 0; $fG = 1; $fB = $fF
+            $fR = 0
+            $fG = 1
+            $fB = $fF
         Case 3
-            $fR = 0; $fG = $fQ; $fB = 1
+            $fR = 0
+            $fG = $fQ
+            $fB = 1
         Case 4
-            $fR = $fF; $fG = 0; $fB = 1
+            $fR = $fF
+            $fG = 0
+            $fB = 1
         Case 5
-            $fR = 1; $fG = 0; $fB = $fQ
+            $fR = 1
+            $fG = 0
+            $fB = $fQ
     EndSwitch
     
     Local $iRed = Int(64 + ($fR * 191))

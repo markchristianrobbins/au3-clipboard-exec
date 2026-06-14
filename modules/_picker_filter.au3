@@ -1,14 +1,19 @@
 #include-once
 ; ==============================================================================
 ; File: _picker_filter.au3
-; Description: Handles path filtering, descendant lookup, and sorting of matches.
+; Paths: C:\_\au3-clipboard-exec\modules\_picker_filter.au3
+; Description: Handles path query string sorting and caches directory children counts.
 ; Functions:
-;   - _Picker_FilterPathsByFuzzyScore (Filters an array of paths by search query basename matching)
-;   - _Picker_SortPathsByLevelAndAlphabet (Alphabetically sorts paths by hierarchy level)
-;   - _Picker_GetDescendants (Returns all structural descendants under a directory)
-;   - _Picker_BuildChildCounts (Caches child and grandchild subdirectory counts)
+;   - _Picker_FilterPathsByFuzzyScore (Filters matching directory name characters case-insensitive)
+;   - _Picker_SortPathsByLevelAndAlphabet (Alphabetically ranks path depth vectors)
+;   - _Picker_GetDescendants (Returns target children arrays below path limits)
+;   - _Picker_BuildChildCounts (Instantiates script counters for subdirectory maps)
 ; ==============================================================================
 #include "_picker_helpers.au3"
+
+; Global declarations to establish dictionary scopes safely before evaluation loops
+Global $oChildCount = 0
+Global $oGrandchildCount = 0
 
 Func _Picker_FilterPathsByFuzzyScore($aMatchesList, $sSearchTxt)
     If $sSearchTxt == "" Then Return $aMatchesList
@@ -52,7 +57,6 @@ Func _Picker_SortPathsByLevelAndAlphabet(ByRef $aPaths)
         $aLevels[$i] = _Picker_GetPathLevel($aPaths[$i])
     Next
 
-    ; Shell Sort algorithm
     Local $iGap = Int($iSize / 2)
     While $iGap > 0
         For $i = $iGap To $iSize - 1
@@ -66,7 +70,7 @@ Func _Picker_SortPathsByLevelAndAlphabet(ByRef $aPaths)
                 ElseIf $aLevels[$j - $iGap] == $iTempLevel Then
                     If StringCompare($aPaths[$j - $iGap], $sTempPath, 0) > 0 Then
                         $bSwap = True
-                    EndIf
+                    Endif
                 EndIf
                 
                 If Not $bSwap Then ExitLoop
@@ -122,17 +126,11 @@ Func _Picker_GetDescendants(ByRef $aPaths, $sExploreDir)
 EndFunc
 
 Func _Picker_BuildChildCounts(ByRef $aPaths)
-    If Not IsObj($oChildCount) Then
-        Global $oChildCount = ObjCreate("Scripting.Dictionary")
-        $oChildCount.CompareMode = 1
-    EndIf
-    If Not IsObj($oGrandchildCount) Then
-        Global $oGrandchildCount = ObjCreate("Scripting.Dictionary")
-        $oGrandchildCount.CompareMode = 1
-    EndIf
-    
-    $oChildCount.RemoveAll()
-    $oGrandchildCount.RemoveAll()
+    ; Synchronize master initialization dictionary mappings globally
+    $oChildCount = ObjCreate("Scripting.Dictionary")
+    $oChildCount.CompareMode = 1
+    $oGrandchildCount = ObjCreate("Scripting.Dictionary")
+    $oGrandchildCount.CompareMode = 1
     
     Local $iSize = UBound($aPaths)
     For $i = 0 To $iSize - 1

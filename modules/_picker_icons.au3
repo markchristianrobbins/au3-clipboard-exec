@@ -1,6 +1,7 @@
 #include-once
 ; ==============================================================================
 ; File: _picker_icons.au3
+; Paths: C:\_\au3-clipboard-exec\modules\_picker_icons.au3
 ; Description: Handles high-performance system icons and specialized folder caches.
 ; Functions:
 ;   - _Picker_GetFolderIconCached (Queries or populates a dictionary mapping path names to shell indices)
@@ -8,8 +9,12 @@
 ; ==============================================================================
 #include "_picker_helpers.au3"
 
+; Global declaration to establish object variable scope safely before evaluation checks
+Global $oIconCache = 0
+
 Func _Picker_GetFolderIconCached($sFolderPath)
-    If Not IsObj($oIconCache) Then
+    ; CRITICAL RESOLUTION FIX: Switched variable presence check to IsDeclared string syntax to stop compiler crash
+    If Not IsDeclared("oIconCache") Or Not IsObj($oIconCache) Then
         Global $oIconCache = ObjCreate("Scripting.Dictionary")
         $oIconCache.CompareMode = 1
     EndIf

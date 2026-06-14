@@ -1,9 +1,10 @@
 #include-once
 ; ==============================================================================
 ; File: _picker.au3
-; Description: Main entry point for the Search Picker GUI.
+; Paths: C:\_\au3-clipboard-exec\modules\_picker.au3
+; Description: Main execution orchestrator interface for the Search Picker GUI.
 ; Functions:
-;   - _Picker_ShowGUI (Creates, manages, and returns from the primary picker GUI loop)
+;   - _Picker_ShowGUI (Allocates local window structures and maintains message loop)
 ; ==============================================================================
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
@@ -12,7 +13,7 @@
 #include <StringConstants.au3>
 #include <Array.au3>
 
-; Sub-file dependencies
+; Sub-file structural module mapping trees
 #include "_picker_globals.au3"
 #include "_picker_helpers.au3"
 #include "_picker_icons.au3"
@@ -30,7 +31,9 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     If $iMaxDisplayRows > $iMaxFitRows Then $iMaxDisplayRows = $iMaxFitRows
     If $iMaxDisplayRows < 5 Then $iMaxDisplayRows = 5
     
-    If Not IsObj($oChildCount) Or Not IsObj($oGrandchildCount) Then _Picker_BuildChildCounts($aAllMatches)
+    If Not IsDeclared("oChildCount") Or Not IsDeclared("oGrandchildCount") Then 
+        _Picker_BuildChildCounts($aAllMatches)
+    EndIf
     
     Local $iMaxMenuHeight = $iInputAreaHeight + 8 + ($iMaxDisplayRows * $iRowHeight) + 12
     Local $iCenterX = (@DesktopWidth - $iMenuWidth) / 2, $iCenterY = (@DesktopHeight - $iMaxMenuHeight) / 2
@@ -44,9 +47,15 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     Local $hInputBg, $hDivider
     _Picker_GUICreateInputField($iMenuWidth, $sSearchQuery, $hInputBg, $g_hInputField, $hDivider)
     
-    Dim $g_aRowIcon[$iMaxDisplayRows + 1], $g_aRowIdxCtrl[$iMaxDisplayRows + 1], $g_aRowBorder[$iMaxDisplayRows + 1]
-    Dim $g_aRowBg[$iMaxDisplayRows + 1], $g_aRowPre[$iMaxDisplayRows + 1], $g_aRowMatch[$iMaxDisplayRows + 1]
-    Dim $g_aRowPost[$iMaxDisplayRows + 1], $g_aRowPath[$iMaxDisplayRows + 1], $g_aRowDepthInfo[$iMaxDisplayRows + 1]
+    ReDim $g_aRowIcon[$iMaxDisplayRows + 1]
+    ReDim $g_aRowIdxCtrl[$iMaxDisplayRows + 1]
+    ReDim $g_aRowBorder[$iMaxDisplayRows + 1]
+    ReDim $g_aRowBg[$iMaxDisplayRows + 1]
+    ReDim $g_aRowPre[$iMaxDisplayRows + 1]
+    ReDim $g_aRowMatch[$iMaxDisplayRows + 1]
+    ReDim $g_aRowPost[$iMaxDisplayRows + 1]
+    ReDim $g_aRowPath[$iMaxDisplayRows + 1]
+    ReDim $g_aRowDepthInfo[$iMaxDisplayRows + 1]
     _Picker_GUICreateRowPool($iMaxDisplayRows, $iInputAreaHeight, $iRowHeight, $iRowX, $iRowWidth, $g_aRowIcon, $g_aRowIdxCtrl, $g_aRowBorder, $g_aRowBg, $g_aRowPre, $g_aRowMatch, $g_aRowPost, $g_aRowPath, $g_aRowDepthInfo)
     
     $g_hRowFocusL = GUICtrlCreateLabel("", 0, 0, 1, 1)
@@ -72,7 +81,11 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     $g_sLastQuery = "|||"
     $g_iLastMouseX = -1
     $g_iLastMouseY = -1
-    $g_aFilteredPaths = [""]
+    
+    ; CRITICAL RESOLUTION FIX: Replaced invalid mid-loop brace notation `[""]` with native cell index allocation
+    Local $aInitialFilterSeed[1] = [""]
+    $g_aFilteredPaths = $aInitialFilterSeed
+    
     $g_iDisplayCount = 0
     $g_iSelectedIndex = 0
     $g_iScrollOffset = 0
@@ -135,6 +148,10 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     WEnd
     
     If $g_sSelectedPath <> "" Then _Picker_AddRecent($g_sSelectedPath)
+    
+    If IsDeclared("oChildCount") Then $oChildCount.RemoveAll()
+    If IsDeclared("oGrandchildCount") Then $oGrandchildCount.RemoveAll()
+    
     GUIDelete($g_hPickerGUI)
     Return $g_sSelectedPath
 EndFunc

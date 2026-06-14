@@ -36,10 +36,9 @@ Func _Hotkey_ContextOp()
         Return
     EndIf
 
-    ; Correct array indexing alignment parameters
-    Local $sName   = $aAppProfile 
-    Local $sKeys   = $aAppProfile 
-    Local $sScript = $aAppProfile 
+    Local $sName   = $aAppProfile
+    Local $sKeys   = $aAppProfile
+    Local $sScript = $aAppProfile
 
     ; Clear clipboard before running macros to ensure fresh verification loops
     ClipPut("") 
@@ -85,6 +84,17 @@ Func _Hotkey_ContextOp()
         ProcessWaitClose($iPID, 3)
     EndIf
     
+    ; --- TARGETED INTERCEPT ROUTE: LOCKED STRICTLY TO THE WIN+ALT+ENTER CONTEXT HOTKEY ---
+    Local $sManualContextCheck = StringLower(StringStripWS(ClipGet(), 3))
+    If $sManualContextCheck == "picker" Then
+        _UI_ShowToast("Launcher Engine", "Spawning external demo workspace navigator process...")
+        
+        ; Launch the separate script file independently via the current AutoIt environment interpreter
+        Run('"' & @AutoItExe & '" "' & @ScriptDir & '\modules\_picker_demo.au3"')
+        Return ; Hard stop. Prevents routing down standard automatic background clip loops.
+    EndIf
+    ; -------------------------------------------------------------------------------------
+    
     _Hotkey_ClipOp()
 EndFunc
 
@@ -101,37 +111,6 @@ Func _Hotkey_ClipOp()
         Return
     EndIf
     
-    ; Normalize input string to perform matching sweeps
-    Local $sTriggerCmd = StringLower(StringStripWS($sClip, 3))
-
-    ; --- DIRECT INTERCEPT RUNTIME ROUTE FOR PICKER TESTING ---
-    If $sTriggerCmd == "picker" Then
-        ; Populate a hardcoded matrix of development folders to verify layout geometry
-        Local $aDemoDataset[8] = [ _
-            "C:\$data\zdoti", _
-            "C:\_\au3-clipboard-exec", _
-            "C:\_\au3-clipboard-exec\modules", _
-            "C:\Projects\WorkNotes", _
-            "C:\Projects\Automation\Scripts", _
-            "C:\Program Files\GPSoftware\Directory Opus", _
-            "C:\Users\Mark\AppData\Local\Programs\cursor", _
-            "C:\$data\logs" _
-        ]
-        
-        _UI_ShowToast("Launcher Engine", "Initializing full screen demo fuzzy dataset array...")
-        
-        ; Feed array into the main non-blocking picker window engine thread
-        Local $sSelection = _Picker_ShowGUI($aDemoDataset, "DEMO PICKER INTERFACE PANELS", "au3")
-        
-        If $sSelection <> "" Then
-            _UI_ShowToast("Picker Selection Caught", "Absolute Selected Path Returned: " & $sSelection)
-        Else
-            _UI_ShowToast("Picker Dismissed", "Selection action canceled by focus drop or escape hook.")
-        Endif
-        Return
-    EndIf
-    ; ---------------------------------------------------------
-
     ; 1. Execute regular expression pattern resolution routing
     Local $sType = _Recognizer_Evaluate($sClip)
     

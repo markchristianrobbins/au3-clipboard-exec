@@ -1,37 +1,42 @@
 #include-once
 ; ==============================================================================
 ; File: _picker_globals.au3
+; Paths: C:\_\au3-clipboard-exec\modules\_picker_globals.au3
 ; Description: Defines all global state variables and GUI element handles.
 ; Functions:
-;   - None (Global variables definition file)
+;   - None (Global variables definition tracker)
 ; ==============================================================================
 
-
-; Global handles used globally across modular helper files
+; Global window and hardware element identifier handles
 Global $g_hPickerGUI = 0
 Global $g_hInputField = 0
 Global $g_hNoResults = 0
 Global $g_hStatusText = 0
 Global $g_hStatusBg = 0
+
+; CRITICAL RESOLUTION FIX: Added missing top and bottom layout frame variables
 Global $g_hBorderL = 0
 Global $g_hBorderR = 0
+Global $g_hBorderT = 0
 Global $g_hBorderB = 0
+
 Global $g_hRowFocusL = 0
 Global $g_hRowFocusR = 0
 Global $g_hRowFocusT = 0
 Global $g_hRowFocusB = 0
 
-Global $g_aRowIcon = 0
-Global $g_aRowIdxCtrl = 0
-Global $g_aRowBorder = 0
-Global $g_aRowBg = 0
-Global $g_aRowPre = 0
-Global $g_aRowMatch = 0
-Global $g_aRowPost = 0
-Global $g_aRowPath = 0
-Global $g_aRowDepthInfo = 0
+; Component list memory tracking channels
+Global $g_aRowIcon[1]
+Global $g_aRowIdxCtrl[1]
+Global $g_aRowBorder[1]
+Global $g_aRowBg[1]
+Global $g_aRowPre[1]
+Global $g_aRowMatch[1]
+Global $g_aRowPost[1]
+Global $g_aRowPath[1]
+Global $g_aRowDepthInfo[1]
 
-; Dynamic state coordinates
+; Dynamic layout state tracking coordinates
 Global $g_sSelectedPath = ""
 Global $g_bHasBeenActive = False
 Global $g_sLastQuery = "|||"
@@ -50,7 +55,7 @@ Global $g_sSavedQueryText = ""
 Global $g_iSavedSelectedIndex = 0
 Global $g_iSavedScrollOffset = 0
 
-; Accelerator handles
+; Keyboard dummy accelerator handles mapping hooks
 Global $g_hDUp = 0
 Global $g_hDDown = 0
 Global $g_hDPgUp = 0

@@ -1,12 +1,5 @@
-<!-- 
-# TEMPLATE: AITASKS.template.md
-# INSTRUCTIONS FOR THE AI AGENT:
-# This file tracks immediate development tasks and feature checklists.
-# Always update this backlog at the beginning of your turn (when new chat instructions 
-# are received) and mark items completed ([x]) once verified.
--->
-
 # AI Tasks
+
 ---
 ## Back to...
 - ▪️[AGENTS.md](AGENTS.md)
@@ -21,68 +14,55 @@
 - ▪️[SPEC.md](SPEC.md)
 - ▪️[TESTING.md](TESTING.md)
 
-<!-- 
-  INSTRUCTION: Detail direct feature and workflow requests from the user's chat stream.
-  State tasks explicitly and breakdown complex tasks into sub-bullets.
--->
-## [ ] Incoming tasks from chat
-- [ ] [Immediate chat task title 1]
-    - [Sub-details or acceptance criteria]
-- [ ] [Immediate chat task title 2]
+## [x] Incoming tasks from chat
+- [x] Reverse engineer full AutoIt application codebase
+    - Unraveled `clipboard-exec.au3` hotkey binding routes and main loops.
+    - Reverse engineered directory matching criteria, regular expressions, and handlers.
+    - Unraveled the Search Picker GUI design specs, custom hashing algorithms, colors, and key interceptors.
+- [x] Document code metrics and update structural markdown files
+    - Overwrote AGENTS, AILOG, AITASKARCH, AITASKS, BUILD, CODE, FEATURES, MANUAL, README, SPEC, and TESTING.
 
-<!-- 
-  INSTRUCTION: Checklists of ongoing file structural, layout, or backend changes.
--->
 ## [ ] New Changes
-- [ ] Change [Source] to [Target]
-    - [Describe what is being reorganized or cleaned up in the files]
+- [ ] Migrate central app configurations inside `.ini` layouts to JSON
+    - Define robust schemas for mapping application names to window behaviors.
+- [ ] Implement incremental indexing sweeps in `_index.au3`
+    - Create dynamic file watch alerts to prevent full scans when small updates occur.
 
-<!-- 
-  INSTRUCTION: Specify any new application configurations, environment overrides, 
-  or system values in local settings containers (.json, .ini, .env).
--->
 ## [ ] New Settings
-- [ ] [Setting Key or Property Name]
-    - [Value format and explanation of how it affects runtime states]
+- [ ] `sendkeys` under `[Cursor]` profile
+    - Value: `"{HOME}+{END}^c"` (controls editor string selection macros).
+- [ ] `$g_sDOpusRt` under `modules\_handler_dopus.au3`
+    - Value: `C:\Program Files\GPSoftware\Directory Opus\dopusrt.exe` (points to lister launcher runtime).
 
-<!-- 
-  INSTRUCTION: Tasks mapping to newly registered commands (e.g., VS Code commands, AHK actions).
--->
 ## [ ] New Commands
-- [ ] Command: `[Command ID / Name]`
-    - [Key callback and functionality definition]
+- [ ] Command: `> [DOS Command]`
+    - Inline CLI interception mapping standard capture outputs back straight into clipboard structures.
 
-<!-- 
-  INSTRUCTION: Tasks mapping to newly configured keystroke hotkeys or shortcuts.
--->
 ## [ ] New Bindings
-- [ ] Binding: `[Keys Combination, e.g. Ctrl+Shift+S]`
-    - [Callback command or action triggering mapping]
+- [ ] Binding: `Win+Alt+Enter`
+    - Call context checks matching profiles configuration metrics, evaluating active window titles and invoking specific actions.
 
-<!-- 
-  INSTRUCTION: Checklists of newly requested major feature modules.
--->
 ## [ ] New Features
-- [ ] Feature Name: [Feature Description]
-    - [User-facing outcome and core sub-modules list]
+- [ ] Directory Hashing Hue Branding
+    - Generate distinct visual branding dynamic hues mapped on directory base names using character ASCII sums.
 
-<!-- 
-  HISTORICAL ARCHIVE SECTION:
-  Once features are completed, move them from the sections above into these 
-  historical repositories below to serve as an ongoing registry of the codebase capabilities.
--->
+---
+## Historical Registry
 
-## [ ] Settings
-- [ ] [Configured/Established settings reference]
+### Settings
+- [x] `C:\$data\clipboard-exec.ini` - Main settings parser storage coordinates.
+- [x] `C:\$data\apps.ini` - Window class metadata descriptors registry.
 
-## [ ] Commands
-- [ ] [Configured/Established commands reference]
+### Commands
+- [x] Windows Shell Invoker: `StdOut` pipeline scanner capturing CMD console feedback invisibly.
 
-## [ ] Bindings
-- [ ] [Configured/Established hotkeys reference]
+### Bindings
+- [x] `Win+Ctrl+Shift+Enter` - Global exit process and lock file purge routine.
+- [x] `Win+Alt+Shift+Enter` - Direct clipboard routing regular expression validator.
 
-## [ ] Features
-- [ ] [Configured/Established user-facing features reference]
+### Features
+- [x] Responsive Keyboard Navigation - Full bind mappings wrapping arrow navigations, scrolling offsets, and page increments.
+- [x] Subdirectory Explorer Overlay - Fast layout context breakout of subdirectory lists utilizing Scripting Dictionary counts.
 
 ---
 ## Go Back to...

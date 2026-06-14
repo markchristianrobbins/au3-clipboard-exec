@@ -1,13 +1,7 @@
-<!-- 
-# TEMPLATE: MANUAL.template.md
-# INSTRUCTIONS FOR THE AI AGENT:
-# This file is the developer's handbook. It maps structural topologies, data flow,
-# core algorithms, algebraic formulas, configuration guidelines, and technical specifications.
--->
-
 # Manual
 
-This guide describes the structural architecture, module layout, internal algorithms, optimization behaviors, and technical specifications of the **[Specify Application Name]** codebase.
+This guide describes the structural architecture, module layout, internal algorithms, optimization behaviors, and technical specifications of the **Clipboard Exec Engine** codebase.
+
 ---
 ## Back to...
 - ▪️[AGENTS.md](AGENTS.md)
@@ -23,67 +17,105 @@ This guide describes the structural architecture, module layout, internal algori
 - ▪️[TESTING.md](TESTING.md)
 
 ## 🏗️ 1. Architecture Overview
-<!-- 
-  INSTRUCTION: Outline the structural relationship of files and modules.
-  Include raw ASCII boxes or diagrams to make the architecture immediately obvious.
--->
+
+The background operational loop interacting with specific sub-handlers and the Search Picker GUI:
+
 ```text
  +-----------------------------------------------------------------+
- |                    [Main Module Client Interface]               |
+ |                    [Windows OS / Shell Env]                      |
  +-------------------------------+---------------------------------+
-                                 |
+                                 |  Win+Alt+Enter / Win+Shift+Alt+Enter
                                  v
  +-------------------------------+---------------------------------+
- |                    [Central Control Engine / Core]              |
- +-------------------------------+---------------------------------+
+ |                [clipboard-exec.au3: Core Engine]                 |
+ +-----+-------------------------+---------------------------+-----+
+       |                         |                           |
+       v                         v                           v
+ +-----+--------+         +------+-------+            +------+-----+
+ |  _config.au3 |         | _recognizer  |            |  _utils.au3|
+ |  (Window Map)|         | (Evaluator)  |            |  (Modifier)|
+ +--------------+         +------+-------+            +------------+
                                  |
-           +---------------------+---------------------+
-           |                                           |
-           v                                           v
- +---------+---------------------+           +---------+-----------+
- |       [Module A / Hooks]      |           |     [Module B]      |
- +-------------------------------+           +---------------------+
+         +-----------------------+-----------------------+
+         |                       |                       |
+         v (URL/Path Match)      v (Zdot Token)          v (CommandLine)
+ +-------+------+        +-------+------+        +-------+------+
+ | _handler_dopus|       | _handler_zdot|        | _handler_cmd |
+ |  (Opus Autom)|       | (Cursor Sync)|        | (Silent CLI) |
+ +-------+------+        +--------------+        +--------------+
+         |
+         v (Wildcard Multiple Directory Match Trigger)
+ +-------+---------------------------------------------------------+
+ |                      [_picker.au3: UI Overlay]                  |
+ +-----------------------------------------------------------------+
 ```
-[Detail the high-level operational lifecycle, stating what initiates, handles, and registers events]
+
+### Operational Lifecycle
+1. **Startup**: `_Engine_UnloadExistingInstance()` looks up `.instance.lock`, terminates matches via PIDs, writes its own PID to log, and plays chime sound `0x00000040`.
+2. **Hotkey Bindings**: Registers global keyboard interrupts via DLL user32 hooks.
+3. **Context Sweep**: On pressing `Win+Alt+Enter`, the system extracts the foreground active window class information and sends keystroke sequences defined inside INI configurations to copy text.
+4. **Evaluator**: `_Recognizer_Evaluate` executes regular expressions on copied values.
+5. **Action Routing**: Runs specific handlers (e.g. executes silent CMD buffers or navigates DOpus paths).
+6. **Fuzzy Search Picker**: If matches yield broad candidates, `_Picker_ShowGUI` renders a custom interactive dark-theme list where users can select paths or explore subfolders.
 
 ## 🧠 2. Core Modules & Systems
-<!-- 
-  INSTRUCTION: Document individual subsystems, class constructors, interfaces, 
-  and persistent background loops that govern state transitions.
--->
-- **[System Name, e.g., Hotkey Compiler]**: [Describe internal class interfaces, global trackers, state variables, and callbacks]
-- **[System Name, e.g., Polling Thread]**: [Describe loops, timing triggers, and resource consumption guards]
+
+- **System Tray Loop (`clipboard-exec.au3`)**: Implements `TrayGetMsg()` polling with a 10ms CPU sleep guard to capture tray exit button callbacks.
+- **Modifiers Buffer Manager (`_utils.au3`)**: Blocks main execution via `GetAsyncKeyState` until modifier keys (Alt, Win, Control) are cleared, flushing virtual state arrays cleanly.
+- **High-Performance Pre-Allocated Row Pool (`_picker_gui.au3`)**: Creates 36 label rows upon GUI instantiation. The list controller (`_picker_render.au3`) updates existing labels directly to prevent window rendering stutter on rapid keystrokes.
+- **Scripting.Dictionary Memory Indexes (`_picker_filter.au3`)**: Spawns high-speed Windows COM index dictionary arrays (`Scripting.Dictionary`) dynamically caching child and grandchild folder counts, avoiding recursion lag on deep folder navigations.
 
 ## 🔎 3. Core Algorithm & Mathematical Formulas
-<!-- 
-  INSTRUCTION: Specify any underlying physical or software math calculations used.
-  Represent equations cleanly in LaTeX format (e.g. $$ formula $$) with detailed variable legends.
--->
-[Describe the logical steps, logic gates, conditional switches, or core algorithm steps]
 
-$$\text{[Formula Output Key]} = \text{[Operation]}\left(\frac{\text{[Var 1]} + \text{[Var 2]}}{\text{[Var 3]}}\right)$$
+The Search Picker relies on a deterministic hashing algorithm that extracts folder base names and translates them into a distinctive background brand hue.
 
-- **`[Var 1]`**: [Detailed explanation of variable role and default value]
-- **`[Var 2]`**: [Details]
+$$\text{ASCII\_Sum}(S) = \sum_{i=1}^{\text{Len}(S)} \text{Asc}(S_i)$$
+
+$$\text{Hue\_Value} = \frac{\text{ASCII\_Sum}(S) \pmod{360}}{360}$$
+
+Based on $\text{Hue\_Value}$, fractional RGB indices are calculated using piecewise linear hue transformations inside `_picker_style.au3`:
+
+$$\text{Intensity}(fI) = \begin{cases} 
+      1 & fI \in \{0, 6\} \\
+      fF & fI = 0 \text{ (increasing)} \\
+      1 - fF & fI = 1 \text{ (decreasing)} \\
+      0 & \text{otherwise}
+   \end{cases}$$
+
+For rows that are unselected, RGB color channels are dimmed linearly via a factor parameter to keep background contrast balanced:
+
+$$\text{RGB\_Dimmed} = \text{Floor}(\text{RGB\_Raw} \times 0.65)$$
 
 ## 🛰️ 4. Commands, Keybindings & Context Flags
-<!-- 
-  INSTRUCTION: Detail the operational command registry. This lists all binding combinations,
-  modifier mappings, context filters, and background triggering gates.
--->
-- **[Action Title / ID]**:
-  - **Key combinations**: `[Keys, e.g., Win+Alt+X]`
-  - **Contextual triggers**: `[Filters list, e.g., wintitleis=MyFile.txt]`
-  - **Logical callback**: `[Describe executed code logic]`
+
+- **Global Kill Intercept**:
+  - **Key combination**: `Win+Ctrl+Shift+Enter` (AutoIt mapping: `#^+{ENTER}`)
+  - **Logical callback**: Cleans lock files and terminates background runtime loops.
+- **Context App Scanner**:
+  - **Key combination**: `Win+Alt+Enter` (AutoIt mapping: `#!{ENTER}`)
+  - **Logical callback**: Scans active PID titles, retrieves corresponding INI command keys, triggers copy sequences, and routes strings through the matcher.
+- **Explicit Clipboard Router**:
+  - **Key combination**: `Win+Alt+Shift+Enter` (AutoIt mapping: `#!+{ENTER}`)
+  - **Logical callback**: Skips context copying and immediately routes active clipboard text contents to corresponding handler engines.
 
 ## 🔧 5. Workspace Build & Configuration
-<!-- 
-  INSTRUCTION: Document configuration files format (.ini, .json, .env.example) 
-  and properties mapping. Highlight how to customize settings.
--->
-- **[File Name / Path]**:
-  - **Configuration Section/Field**: `[Property Name]`
-  - **Description**: [Explain variable impact and guidelines for overriding values]
+
+- **`C:\$data\apps.ini` (System Window Definitions)**:
+  - Configures window attributes to map foreground executables to app profiles.
+  ```ini
+  [Cursor]
+  class=chrome_widgetwin_1
+  exe=cursor.exe
+  titlematchmode=2
+  ```
+- **`C:\$data\clipboard-exec.ini` (Macro Execution Keys)**:
+  - Maps profiles to target keys or `.au3` scripts.
+  ```ini
+  [Cursor]
+  sendkeys={HOME}+{END}^c
+  ```
+- **`@AppDataDir\OpusRecentFolders.txt` (Directory History)**:
+  - Text register storing a rolling log of up to 5 recently accessed folders.
 
 ---
 ## Go Back to...

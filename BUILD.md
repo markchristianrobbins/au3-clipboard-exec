@@ -1,11 +1,3 @@
-<!-- 
-# TEMPLATE: BUILD.template.md
-# INSTRUCTIONS FOR THE AI AGENT:
-# This file serves as the system construction guide. It must document building blocks,
-# dependencies installation commands, target directory structures, packing pipelines,
-# and runtime execution.
--->
-
 # Build
 
 ## Go to...
@@ -24,40 +16,56 @@
 ---
 
 ## 🛠️ Build & Packaging Pipeline
-<!-- 
-  INSTRUCTION: Detail the high-level architecture of the build system.
-  Mention variables compilation pathways, compiler tools, preprocessors, etc.
-  Example: "TypeScript -> Esbuild -> Node", "Ini -> AHK v2 -> OS Kernel".
--->
-[Describe the compilation pipeline here, with step-by-step logic detailing how source code converts into running software]
+
+The compilation pipeline translates modular AutoIt (`.au3`) source files into a unified high-performance machine code executable (`.exe`). The system utilizes the AutoIt3 compiler compiler backend.
+
+```text
+  [Main Orchestrator au3] + [Included modules\_*.au3]
+                          |
+                          v
+         [AutoIt Library Preprocessor (Obfuscator)]
+                          |
+                          v
+  [Standard Aut2Exe Compiler (Translates to Executable)]
+                          |
+                          v
+   [Compiled Binary (.exe) + Embedded Icons & Metadata]
+```
+
+### Step-by-Step Build Pipeline
+1. **Source Pre-Processing**: AutoIt preprocessor parses `#include` and `#include-once` directives starting from `clipboard-exec.au3`, validating dependencies alphabetically.
+2. **Resource Compression**: Embeds Windows manifest controls, application descriptions, and high-DPI execution icons (`shell32.dll` assets) of the target executable.
+3. **PE Creation**: The `Aut2Exe` compiler combines tokenized intermediate scripts with the standard Interpreter runtime engine to output a standalone Windows Portable Executable (PE).
 
 ### 📦 Key Components
-<!-- 
-  INSTRUCTION: List the primary files, bundles, libraries, and compiler executables.
--->
-- **[Component Name/Path]**: [Purpose of this file/directory inside the compilation chain]
-- **[Compiler Tooling]**: [Dependencies, binary packages, transpilators required for completion]
+- **`clipboard-exec.au3`**: Main executable container script parsing main loop messages.
+- **`Aut2Exe.exe`**: Standard AutoIt compiler bin converting script files into native PE binaries.
+- **`apps.ini` & `clipboard-exec.ini`**: Desktop custom configurations initializing system states.
+- **`modules\_picker_demo.au3`**: Standalone mock directory selection launcher demonstrating picker features.
 
 ## 🚀 Execution & Packing Commands
-<!-- 
-  INSTRUCTION: List the literal, usable CLI shell commands for restoring packages, 
-  launching development modes, linting files, and packaging production bundles.
--->
-- **Install Dependencies**:
+
+To manage and build the application on developer workstations, use the following terminal commands:
+
+- **Run in Development Mode**:
   ```bash
-  [Package manager install command, e.g., npm install]
+  # Execute the persistent tray script directly via the interpreter binary
+  "C:\Program Files (x86)\AutoIt3\AutoIt3.exe" "./clipboard-exec.au3"
   ```
-- **Local Dev Server / Watch Mode**:
+- **Local Dev Simulation (Launch Demo Picker)**:
   ```bash
-  [Command for testing, e.g., npm run dev]
+  # Initiates the demo environment populating sample mock paths and displaying the UI
+  "C:\Program Files (x86)\AutoIt3\AutoIt3.exe" "./modules/_picker_demo.au3"
   ```
-- **Verification / Linting**:
+- **Syntax Check / Verification**:
   ```bash
-  [Command for checks, e.g., npm run lint]
+  # Check for syntax anomalies using the AU3Check utility
+  "C:\Program Files (x86)\AutoIt3\AU3Check.exe" "./clipboard-exec.au3"
   ```
-- **Production Package Compilation**:
+- **Binary Distribution Compiler**:
   ```bash
-  [Command to build distribution bundles, e.g., npm run build]
+  # Compiles the modular script into a 64-bit standalone executable with optimized flags
+  "C:\Program Files (x86)\AutoIt3\Aut2Exe\Aut2Exe_x64.exe" /In "./clipboard-exec.au3" /Out "./dist/clipboard-exec.exe" /Icon "./assets/engine.ico" /Comp 4
   ```
 
 ---

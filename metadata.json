@@ -1,0 +1,6 @@
+{
+  "name": "AutoIt v3 Coordinate & Color Picker",
+  "description": "An interactive coordinate, color, and pixel picker utility for generating production-ready AutoIt v3 (AU3) scripts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

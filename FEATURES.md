@@ -1,11 +1,3 @@
-<!-- 
-# TEMPLATE: FEATURES.template.md
-# INSTRUCTIONS FOR THE AI AGENT:
-# This file structures user-facing capabilities and functional features.
-# Group related software parts into "Feature Groups" (with tags and anchors),
-# then list them alphabetically under "All Features".
--->
-
 # Features
 
 ---
@@ -22,207 +14,108 @@
 - ▪️[SPEC.md](SPEC.md)
 - ▪️[TESTING.md](TESTING.md)
 
-Welcome to [Specify Program Name]! [Provide a 2-3 sentence overview of what the tool accomplishes and how it improves productivity].
+Welcome to **Clipboard Exec Engine**! This utility acts as a background automation controller that hooks system actions to active window profiles, watches global hotkeys, parses raw clipboard queries with Regular Expression matching, and fires direct pathways to editors, and file listers.
 
 ## Project Name
 - clipboard-exec
 ## Project Language
-- Autoit
+- AutoIt v3 (AU3)
 ## Project Location
-- C:\_\au3-clipboard-exec\
+- `C:\_\au3-clipboard-exec\`
+
 ## Project Modules
-# Proposed Module Architecture
+The modular structural layout dividing functions across decoupled components:
 
 ### Main Orchestrator
 * **`clipboard-exec.au3`**
-  * Core runtime script that initializes the background engine.
-  * Manages the persistent application loop and system tray event loops.
-  * Registers global systems hotkeys (`Win+Ctrl+Shift+Enter`, `Win+Ctrl+Enter`, `Win+Shift+Enter`).
+  * Spawns singleton instances, manages the persistent tray event loop, and registers global hotkeys (`Win+Ctrl+Shift+Enter`, `Win+Alt+Enter`, `Win+Alt+Shift+Enter`).
 
 ### Core Modules
-* **`_config.au3` (Configuration & INI Engine)**
-  * Parses and validates parameters from `clipboard-exec.ini` and `C:\$data\apps.ini`.
-  * Evaluates system window criteria (class, title, titlematchmode, exe) to identify targeted applications.
-  * Resolves corresponding operational actions (`sendkeys` or target external `.au3` scripts).
+* **`modules\_config.au3` (Configuration & UI Profile Scanner)**
+  * Returns active application window coordinates, titles, and processes. Returns context-specific keystroke macros.
+* **`modules\_recognizer.au3` (Regex Clipboard Classifier)**
+  * Evaluates raw copied text patterns to dispatch URLs with custom schemes, directories, commands, and temporal shortcuts.
+* **`modules\_ui.au3` (Dynamic Notifications)**
+  * Displays borderless always-on-top custom feedback toasts cleanly without interrupting user workspace typing flow.
+* **`modules\_utils.au3` (Win32 Keyboard & Audio Helpers)**
+  * Flushes physical Alt/Shift/Ctrl/Win states before sending key sequences, preventing layout locks.
 
-* **`_recognizer.au3` (Clipboard Parser Engine)**
-  * Processes raw clipboard inputs against priority-ranked Regular Expression conditions.
-  * Identifies patterns matching Window Titles, Zdots, Registries, Paths, Full Files, Partial Names, or Commands.
-  * Flags special operators like the `+` prefix for window duplication overrides.
+### Action Handlers
+* **`modules\_handler_cmd.au3` (CMD Interceptor Engine)**
+  * Executes silent command sequences invisibly. Spawns hidden subprocesses and redirects Standard Output (stdout/stderr) blocks directly back into the system clipboard.
+* **`modules\_handler_dopus.au3` (Directory Opus Automator)**
+  * Directly manages `dopusrt.exe` connections. Sanitizes trailing backslash inputs, targets directory lister reuse tab configurations, or opens new isolated windows.
+* **`modules\_handler_zdot.au3` (Zdot IDE Synchronization)**
+  * Resolves chronological timestamp markers of files. Inspects nested directory index blocks under `C:\$data\zdoti\`, parses targeted scripts, and calls Cursor IDE directly highlighting specific lines.
 
-* **`_index.au3` (File System Indexer)**
-  * Scans storage paths defined under the `[index-paths]` configuration block.
-  * Compiles database updates to `clipboard-exec-index.txt`.
-  * Processes broad search strings to locate nearest file or directory matches.
+### Interactive Search Picker
+* **`modules\_picker.au3`** (Central Orchestrator)
+* **`modules\_picker_gui.au3`** (Pre-allocated Control Structures)
+* **`modules\_picker_render.au3`** (Fuzzy Sub-Match Renderer)
+* **`modules\_picker_filter.au3`** (Fuzzy Sieve Scoring & Word Levels Sort)
+* **`modules\_picker_style.au3`** (Dynamic Directory Hashing Hues & Contrast Math)
+* **`modules\_picker_event.au3`** (Interactive Messages Loop)
+* **`modules\_picker_keys.au3`** (Responsive Bound Key Offsets)
+* **`modules\_picker_recent.au3`** (External Recent History Persistence)
+* **`modules\_picker_globals.au3`** (Global States)
+* **`modules\_picker_helpers.au3`** (String Separator Parsers)
+* **`modules\_picker_icons.au3`** (Shell Folder Icon Type Dictionary Map)
 
-* **`_ui.au3` (User Interface & Pickers)**
-  * Renders native Windows notification toasts for error states, feedback loops, and process completion status.
-  * Creates an interactive picker GUI window when wildcard path queries yield multiple candidate items.
-
-### Action Sub-Handlers
-* **`_handler_zdot.au3` (Zdot Resolution System)**
-  * Extracts metadata timestamps from `z.YYYYMMDD...` syntax structures.
-  * Pulls file coordinates out of localized indices housed inside `C:\$data\zdoti\`.
-  * Spawns specialized instances of the Cursor text editor targeted directly at specific source lines.
-
-* **`_handler_registry.au3` (Registry Navigation Driver)**
-  * Standardizes abbreviated root hives (converting `HKLM`, `HKCU`, etc. to canonical formats).
-  * Directs active system `regedit.exe` environments to force-jump precisely into targeted keys.
-
-* **`_handler_dopus.au3` (Directory Opus Interface)**
-  * Constructs automation calls pointing at Directory Opus application binaries.
-  * Orchestrates folder navigation, lister reuse hooks, and forces new window breakouts when requested.
-
-* **`_handler_cmd.au3` (Command Interceptor Engine)**
-  * Evaluates commands initialized via the `>` designator.
-  * Spawns hidden `cmd.exe` runtimes to execute system operations invisibly.
-  * Captures standard output arrays (stdout) and returns raw telemetry text blocks straight into the clipboard buffer.
-
-## Project Structure
-C:\_\au3-clipboard-exec\
-│   clipboard-exec.au3          <-- Main orchestrator (Hotkeys & Main loop)
-│   clipboard-exec-index.txt    <-- Generated index
-│   clipboard-exec.ini          <-- Settings
-│
-└───modules\
-        _config.au3
-        _handler_cmd.au3
-        _handler_dopus.au3
-        _handler_registry.au3
-        _handler_zdot.au3
-        _index.au3
-        _recognizer.au3
-        _ui.au3
-## Features Tentative
-### Runs in tray
-### Components
-#### Main
-- clipboard-exec.au3
-#### File Index
-- name clipboard-exec-index.txt
-  - use index generated by specified paths clipboard-exec.ini section [index-paths]
-### Hotkeys
-- win+ctrl+shift+enter
-  - exit
-- win+ctrl+enter
-  - operate based on active window and ini value
-  - appname is determined by C:\$data\apps.ini
-    - entries there like
-      - [appname]
-      - class =
-      - titlematchmode =
-      - title =
-      - exe =
-    - clipboard-exec.ini will look like
-      - [appname]
-      - sendkeys =
-      - au3 =
-    - either sendkeys or au3 is present
-      - doing the sendkeys will load the clipboard
-      - running the au3 will load the clipboard
-    - then we proceed as if win+shift+enter was pressed
-- win+shift+enter
-  - operate based on clipboard contents
-### Clipboard contents recognition
-- window titles
-  - example
-    - filename|notepad
-  - if window exists then activate otherwise windows notification toast
-- zdots
-  - examples
-    - z.202606140317055140
-    - z-202606140317055140
-    - 202606140317055140
-  - look up first line of C:\$data\zdoti\2026\06\14\0317055140.zdoti
-  - find the location of z.202606140317055140
-  - open file in cursor at that line and column
-- registry paths
-  - examples
-    - Computer
-    - Computer\HKEY...
-    - HKEY...
-    - HKCR...
-    - HKCU...
-    - HKLM...
-    - HKU...
-    - HKCC...
-  - open regedit to that key
-- directory paths
-  - examples
-    - C:\...
-    - C:\\...
-    - C:/...
-    - \...
-    - \\...
-    - /...
-  - open dopus but reuse dopus window
-  - if proceeded by + then open dopus new window
-- directory names and partial paths
-  - use index generated by specified paths clipboard-exec.ini section [index-paths]
-  - open nearest match or if more than one match, offer picker of found directories
-  - open with dopus but reuse dopus window
-  - if proceeded by + then open dopus new window
-- file full paths
-  - forward or backward slashes or double backward slashes
-  - try to find window with filename in title
-    - activate window
-  - else
-    - default action on file
-- file partial names
-  - use index generated by specified paths clipboard-exec.ini section [index-paths]
-  - open nearest match or if more than one match, offer picker of found files
-- dos command
-  - example
-    - > dir
-  - capture output to clip
-  - notify windows toast
-
-
-
+---
 
 ## Feature Groups
 
-<!-- 
-  INSTRUCTION: Detail feature groups. Each should start with a relevant icon,
-  a unique group number, and an anchor tag linking directly to sections.
-  
-  Example Pattern:
-  ### 📦 1. Administrative Actions
-  <a id="z1" name="z.1"></a>
-  Description of the administrative controls and configuration models.
-  - **[My Feature Title](#my-feature-title)** - Short summary explanation.
--->
-
-### [Icon] 1. [Group Title]
+### 📦 1. Input Recognition & Action Routers
 <a id="z1" name="z.1"></a>
-[Provide a clear paragraph outlining what this group of features coordinates and achieves]
-- **[[Feature Title]](#[Feature-Title-Hyphenated-Link])** - [Concise 1-sentence description of the feature]
+Defines the background modules scanning active window states, checking clipboard data types, and routing strings down action channels.
+- **[Clipboard Format Classifiers](#clipboard-format-classifiers)** - Evaluates URL, Directory, ZDot, or Commands regular expressions.
+- **[Silent CMD Interceptor](#silent-cmd-interceptor)** - Resolves console operations invisibly and captures output logs.
+- **[Directory Opus Automator](#directory-opus-automator)** - Opens full paths, reusing active views or instantiating new windows.
+- **[Zdot Temporal Coordinates Sync](#zdot-temporal-coordinates-sync)** - Locates file registers across chronological folders on disk.
 
-### [Icon] 2. [Group Title]
+### 🎨 2. Custom Search Picker UI
 <a id="z2" name="z.2"></a>
-[Group paragraph]
-- **[[Feature Title]](#[Feature-Title-Hyphenated-Link])** - [Concise 1-sentence description of the feature]
+An interface overlay built from scratch rendering matching paths, highlighting letter subsets, and persisting selection history.
+- **[Pre-Allocated Row Pool](#pre-allocated-row-pool)** - Eliminates UI creation lag by recycling list labels.
+- **[Fuzzy Sub-Match Highlight](#fuzzy-sub-match-highlight)** - Displays typing matches with custom color styles.
+- **[Dynamic Directory Hashing Hues](#dynamic-directory-hashing-hues)** - Generates unique branding colors derived from folder names.
+- **[Recursive Explore Sub-Mode](#recursive-explore-sub-mode)** - Navigates nested directory trees with interactive controls.
 
+---
 
 ## All Features
 
-<!-- 
-  INSTRUCTION: List all features individually, sorted alphabetically.
-  Ensure they reference their parent Group with an internal hyperlink.
-  
-  Example Pattern:
-  ### My Feature Title
-  - Group: [Administrative Actions](#z1)
-  Detailed walkthrough of the feature mechanism, properties, hooks, or parameters used.
--->
+### Clipboard Format Classifiers
+- Group: [Input Recognition & Action Routers](#z1)
+Uses regularized expressions to classify raw string clips. Automatically launches default web browsers for URL patterns (`https:`, `http:`, or `aip:` protocol schemes), filters valid drive/UNC structures for full folder paths, maps dot notations (`.`, `@`) straight to the Zdot engine, and intercept terminal blocks (`>`, `cmd `) to invoke the console handler.
 
-### [Feature Title]
-- Group: [[Group Title]](#z1)
-[Explain what this feature does, including the underlying algorithms, user-facing experience, triggers, and configurations]
+### Silent CMD Interceptor
+- Group: [Input Recognition & Action Routers](#z1)
+Processes trailing arguments of text blocks initiated with the `>` operator. Automatically compiles executable vectors invisibly under hidden `@SW_HIDE` states, registers a hard wait limit of 10 seconds to avoid locking active threads, reads raw bytes out of child process memory channels, and pipes combined logs (StdOut + StdErr) directly back into system clipboard structures.
 
-### [Feature Title]
-- Group: [[Group Title]](#z2)
-[Feature explanation]
+### Directory Opus Automator
+- Group: [Input Recognition & Action Routers](#z1)
+Targets GPSoftware's Directory Opus. Translates path layouts, safely guards raw partition drive indicators, and runs `dopusrt.exe` arguments. Maps the prefix marker `+` to breakout new directory containers, and defaults to standard lister tab recycling configurations `NEWTAB=findexisting,tofront` before focusing window sheets to the front stack.
+
+### Zdot Temporal Coordinates Sync
+- Group: [Input Recognition & Action Routers](#z1)
+Resolves numerical markers that correspond to source file changes. Extracts 14-digit timestamps, locates custom calendar registers in `C:\$data\zdoti\YYYY\MM\DD\*.zdoti`, parses local entries to extract target script filenames, performs quick substring matching to isolate row indexes, and spawns the Cursor editor directly highlighting specified lines via `--goto` arguments.
+
+### Pre-Allocated Row Pool
+- Group: [Custom Search Picker UI](#z2)
+Eliminates interface drawing lag. Spawns 36 recycled label elements on initial startup, dynamically positioning and modifying properties of existing elements rather than constructing controls inside change loops.
+
+### Fuzzy Sub-Match Highlight
+- Group: [Custom Search Picker UI](#z2)
+Compares search queries with folder base names. Splits characters into three visual parts (Pre-Match, Highlight, Post-Match) on row renders to output elegant Segoe UI font selections alongside high-contrast colors, updating letter bounds dynamically as users type.
+
+### Dynamic Directory Hashing Hues
+- Group: [Custom Search Picker UI](#z2)
+Generates folder branding colors. Converts characters of parent folders into unified numbers via ASCII sums, translates values to fractional angles across Hue spectrum grids, converts values to RGB matrices, and dims values on secondary rows to keep contrast elegant.
+
+### Recursive Explore Sub-Mode
+- Group: [Custom Search Picker UI](#z2)
+Enables quick folder exploration. Pressing `Ctrl+Enter` lock-scrolls directories as parents, updates active dictionaries with nested child counts, and parses subdirectories. Backspace returns to grandparent directories, and escaping exits explore layers without losing search states.
 
 ---
 ## Go Back to...

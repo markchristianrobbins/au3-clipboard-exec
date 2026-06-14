@@ -126,6 +126,10 @@
 - [x] Ensure index file creation on start and fix root dirty flag clobbering
     - Configured `_Index_Initialize` to auto-create `clipboard-exec-index.txt` on startup if it is missing, guaranteeing the file is always created.
     - Moved `$g_bIndexDirty = False` before crawling configured root paths to prevent clobbering the dirty state, allowing newly found root folders to trigger a save.
+- [x] Eliminate slow/restricted System.Collections.ArrayList COM dependency other OS-wide locks
+    - Fully rewrote the `_Index_ForceReload()` BFS folder crawl using a 100% native, ultra-fast AutoIt linear array circular queue. This prevents script crashes/exceptions from missing, restricted, or corrupted .NET runtime bindings.
+- [x] Clean double and single quote wrappers from INI root paths
+    - Applied sanitizing `StringRegExpReplace` checks to strip surrounding quotes from paths matched in the INI file, resolving `FileExists()` directory checking failures.
 - [x] Enforce index path alongside clipboard-exec.au3
     - Designed `_Index_GetIndexPath()` searcher that guarantees the `clipboard-exec-index.txt` database lives in the same folder as `clipboard-exec.au3` even when sub-modules are evaluated.
 - [x] Mousewheel list scrolling

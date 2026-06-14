@@ -81,6 +81,8 @@ Func _Index_ProcessQueueBatch()
         If Not @error Then
             For $i = 1 To $aRootSections[0][0]
                 Local $sRoot = StringStripWS($aRootSections[$i][1], 3)
+                $sRoot = StringRegExpReplace($sRoot, '^"|"$', '') ; Strip surrounding double quotes if any
+                $sRoot = StringRegExpReplace($sRoot, "^'|'$", '') ; Strip single quotes
                 If FileExists($sRoot) Then
                     _ArrayAdd($g_aIndexQueue, $sRoot)
                     ; Add root directory itself to the database index
@@ -232,18 +234,21 @@ Func _Index_ForceReload()
     
     Local $sIgnoreDirsStr = IniRead($sConfigIni, "indexing", "ignore_dirs", "node_modules;.git;.svn;dist;.next;build")
     Local $aIgnoreDirs = StringSplit($sIgnoreDirsStr, ";")
+    Local $bIgnoreGuids = (StringLower(IniRead($sConfigIni, "indexing", "ignore_guids", "true")) == "true")
+    Local $bIgnoreFiles = (StringLower(IniRead($sConfigIni, "indexing", "ignore_files", "true")) == "true")
     
-    Local $aQueue = ObjCreate("System.Collections.ArrayList")
-    If Not IsObj($aQueue) Then
-        _UI_ShowToast("Index Reload", "System collections array list unavailable.")
-        Return
-    EndIf
-    
+    Local $aQueue[10000]
+    Local $iReadPtr = 0
+    Local $iWritePtr = 0
     Local $iCount = 0
+    
     For $i = 1 To $aRootSections[0][0]
         Local $sRoot = StringStripWS($aRootSections[$i][1], 3)
-        if $sRoot <> "" and FileExists($sRoot) Then
-            $aQueue.Add($sRoot)
+        $sRoot = StringRegExpReplace($sRoot, '^"|"$', '') ; Strip surrounding quotes if any
+        $sRoot = StringRegExpReplace($sRoot, "^'|'$", '') ; Strip single quotes
+        If $sRoot <> "" and FileExists($sRoot) Then
+            $aQueue[$iWritePtr] = $sRoot
+            $iWritePtr += 1
             If Not $g_oIndexMap.Exists($sRoot) Then
                 $g_oIndexMap.Add($sRoot, 1)
                 $iCount += 1
@@ -256,12 +261,15 @@ Func _Index_ForceReload()
         Return
     EndIf
     
-    Local $iMaxItems = 5000 ; Guard safety limit
-    While $aQueue.Count > 0 And $iCount < $iMaxItems
-        Local $sCurrentDir = $aQueue.Item(0)
-        $aQueue.RemoveAt(0)
+    Local $iMaxItems = 10000 ; Guard safety limit
+    While $iReadPtr < $iWritePtr And $iCount < $iMaxItems
+        Local $sCurrentDir = $aQueue[$iReadPtr]
+        $iReadPtr += 1
         
-        Local $hSearch = FileFindFirstFile($sCurrentDir & "\*.*")
+        Local $sSearchPath = $sCurrentDir
+        If StringRight($sSearchPath, 1) <> "\" Then $sSearchPath &= "\"
+        
+        Local $hSearch = FileFindFirstFile($sSearchPath & "*")
         If $hSearch <> -1 Then
             While 1
                 Local $sFileName = FileFindNextFile($hSearch)
@@ -274,8 +282,9 @@ Func _Index_ForceReload()
                 
                 Local $sAttribs = FileGetAttrib($sFullPath)
                 Local $bIsDir = StringInStr($sAttribs, "D") > 0
+                
+                Local $bSkip = False
                 If $bIsDir Then
-                    Local $bSkip = False
                     For $j = 1 To $aIgnoreDirs[0]
                         If StringLower($sFileName) == StringLower($aIgnoreDirs[$j]) Then
                             $bSkip = True
@@ -286,7 +295,20 @@ Func _Index_ForceReload()
                         If Not $g_oIndexMap.Exists($sFullPath) Then
                             $g_oIndexMap.Add($sFullPath, 1)
                             $iCount += 1
-                            $aQueue.Add($sFullPath)
+                            If $iWritePtr < 9990 Then ; Guard queue overflow
+                                $aQueue[$iWritePtr] = $sFullPath
+                                $iWritePtr += 1
+                            EndIf
+                        EndIf
+                    EndIf
+                Else
+                    ; If not a directory, handle file index request
+                    If Not $bIgnoreFiles Then
+                        If $bIgnoreGuids And _Index_IsGuidPattern($sFileName) Then ContinueLoop
+                        
+                        If Not $g_oIndexMap.Exists($sFullPath) Then
+                            $g_oIndexMap.Add($sFullPath, 1)
+                            $iCount += 1
                         EndIf
                     EndIf
                 EndIf

@@ -15,13 +15,29 @@
 
 ## Commit Message
 ```text
-feat(index): ensure automatic index file initialization and fix root indexing dirty state behavior
+feat(index): rewrite force reload utilizing robust, zero-dependency native array pointer queue and strip surrounding quotes from config paths
 
-- Configured _Index_Initialize to auto-create an empty `clipboard-exec-index.txt` on application startup if it is not present.
-- Adjusted the position of the reset for `$g_bIndexDirty = False` in `_Index_ProcessQueueBatch`, resolving a bug where new root directory registers were not saved to disk during the first scan.
+- Replaced COM-based System.Collections.ArrayList inside _Index_ForceReload with a 100% native AutoIt circular array pointer queue to eliminate script crashes and COM initialization blockages.
+- Added regex quote-stripping patterns in both index sweep routines to clean surrounding double and single quotes from paths configured in IniReadSection records.
+- Standardized directory-level files/directories traversal parameters ensuring full parity with background batch slicing settings.
 ```
 
 ## Log Entries
+
+## [2026-06-14T23:01:00Z]
+### 🎯 Primary Goals & Requirements
+- Fix empty/blank index database file generation.
+- Resolve failure when clicking the "Reload" index link on the picker toolbar.
+- Fully eliminate the delicate COM dependency on `System.Collections.ArrayList` which can fail/crash on target OS installations.
+- Clean surrounding whitespace, double, and single quotes from paths configured in INI database configs.
+
+### 🛠️ Completed Changes in this Session
+- **Zero-Dependency Native Circular Queue (`/modules/_index.au3`)**: Redesigned `_Index_ForceReload()` traversal queue mapping. Replaced `$aQueue = ObjCreate("System.Collections.ArrayList")` with a static pointer linear array bounded to size 10,000. It manages read/write cursors natively, eliminating any dependency on Microsoft .NET Interop COM frameworks.
+- **INI Quote Sanitization (`/modules/_index.au3`)**: Implemented robust regex sanitization on all root crawler paths. Both background loops and reload loops now correctly strip starting/ending single and double quotes.
+- **File/Folder Scanning Parity (`/modules/_index.au3`)**: Configured the indexing engine inside `_Index_ForceReload()` to parse according to the local user's customized `$bIgnoreFiles` and `$bIgnoreGuids` preferences.
+
+### 🔸 Affected Files
+- `/modules/_index.au3`
 
 ## [2026-06-14T22:37:00Z]
 ### 🎯 Primary Goals & Requirements

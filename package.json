@@ -1,0 +1,29 @@
+{
+	"name": "",
+	"displayName": "",
+	"description": "",
+	"version": "0.0.1",
+	"publisher": "markrobbins",
+	"engines": {
+		"vscode": "^1.60.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [],
+	"license": "MIT",
+	"main": "extension.js",
+	"icon": "icon.jpg",
+	"files": [
+		"extension.js",
+		"icon.jpg",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"package": "vsce package"
+	},
+	"devDependencies": {
+		"@vscode/vsce": "^3.0.0"
+	}
+}

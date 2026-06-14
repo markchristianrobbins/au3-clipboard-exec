@@ -27,12 +27,16 @@
     - Enabled seamless identification of both `z-` and `z.` prefixed chronological timestamps in clipboard evaluated states, seeking `z.` target markers correctly inside the indexed source files.
 - [x] Codify explicit AI logger and chat tracking instruction rules in AGENTS.md
     - Formalized strict workflow parameters requiring `AILOG.md` edits, updated commit message registries, and inline `AITASKS.md` checklists for every turn.
+- [x] Support folder file:/// URLs in directory router
+    - Enabled identification and parsing of file:/// and file:// addresses (including local and network shares) to behave exactly like standard native paths in Directory Opus.
 
 ## [ ] New Changes
 - [ ] Migrate central app configurations inside `.ini` layouts to JSON
     - Define robust schemas for mapping application names to window behaviors.
-- [ ] Implement incremental indexing sweeps in `_index.au3`
-    - Create dynamic file watch alerts to prevent full scans when small updates occur.
+- [x] Implement incremental indexing sweeps in `_index.au3`
+    - Created a highly optimized background file and directory scanner with INI-controlled periodic timers, batch size bounding, and robust filtering for node_modules and GUID-like structures.
+- [x] Integrate production-ready Search Picker with real index file loading
+    - Reconfigured the interactive Search Picker to load directly from the crawled system indices and route selection entries directly to Directory Opus.
 
 ## [ ] New Settings
 - [ ] `sendkeys` under `[Cursor]` profile

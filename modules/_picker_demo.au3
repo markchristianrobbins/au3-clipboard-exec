@@ -8,6 +8,8 @@
 
 #include <MsgBoxConstants.au3>
 #include "_picker.au3"
+#include "_index.au3"
+#include "_handler_dopus.au3"
 
 ; Define some directories to populate the picker with.
 Local $aSampleDirs[22] = [ _
@@ -35,13 +37,21 @@ Local $aSampleDirs[22] = [ _
     "C:\Program Files\Directory Opus" _
 ]
 
-; Show the GUI, passing in the list of paths, a custom window title, and an optional initial search query.
-Local $sResult = _Picker_ShowGUI($aSampleDirs, "DIRECTORY OPUS - QUICK PICKER DEMO", "Music")
+; Load real scanned indices from disk if they exist, fallback to preset mocks
+_Index_Initialize()
+Local $aAllMatches = _Index_LoadIndexedPaths()
+If UBound($aAllMatches) == 0 Or (UBound($aAllMatches) == 1 And $aAllMatches[0] == "") Then
+    $aAllMatches = $aSampleDirs
+EndIf
+
+; Show the GUI, passing in the list of paths, a custom window title, and empty default query.
+Local $sResult = _Picker_ShowGUI($aAllMatches, "DIRECTORY OPUS - INTELLIGENT SEARCH PICKER", "")
 
 If $sResult <> "" Then
-    MsgBox($MB_ICONINFORMATION, "Selection Complete", "You selected:" & @CRLF & $sResult)
+    ; Open the selected path cleanly in Directory Opus
+    _Handler_OpenInDOpus($sResult, "DIRECTORY_FULL")
 Else
-    MsgBox($MB_ICONWARNING, "Selection Cancelled", "No directory was selected (GUI closed or cancelled).")
+    _UI_ShowToast("Search Picker", "Selection cancelled or window closed.")
 EndIf
 
 ; End of file: _picker_demo.au3

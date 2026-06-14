@@ -16,8 +16,11 @@ Func _Recognizer_Evaluate($sTextData)
         Return "URL_LAUNCH"
     EndIf
 
-    ; 2. Check for fully qualified local file system absolute pathways
-    If StringRegExp($sCleanText, "^[a-zA-Z]:\\") Or StringLeft($sCleanText, 2) == "\\" Then
+    ; 2. Check for fully qualified local file system absolute pathways or file:/// URLs
+    Local $sTestText = $sCleanText
+    If StringLeft($sTestText, 1) == "+" Then $sTestText = StringStripWS(StringMid($sTestText, 2), 3)
+
+    If StringRegExp($sTestText, "^[a-zA-Z]:\\") Or StringLeft($sTestText, 2) == "\\" Or StringRegExp($sTestText, "^file://") Then
         Return "DIRECTORY_FULL"
     EndIf
 

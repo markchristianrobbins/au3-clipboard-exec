@@ -11,6 +11,7 @@
 #include "modules\_handler_zdot.au3"
 #include "modules\_handler_cmd.au3"
 #include "modules\_engine.au3"
+#include "modules\_index.au3"
 #include "modules\_hotkeys.au3"
 
 ; Initialize structural singleton background process bounds checking routines
@@ -40,6 +41,8 @@ While 1
         Case $msg = $idExit
             _Hotkey_Exit()
     EndSelect
+    
+    _Index_ProcessQueueBatch()
     Sleep(10)
 WEnd
 

@@ -15,14 +15,53 @@
 
 ## Commit Message
 ```text
-docs: codify AI logging, tracking, and commit message workflow guidelines
+feat: implement periodic incremental indexing sweeps with GUID and ignore exclusions
 
-- Created strict behavioral mandate section in 'AGENTS.md' specifying auto-logging, auto-tasking, and synchronization parameters for each development turn.
-- Updated 'AITASKS.md' to register the task tracking framework constraints as fully resolved.
-- Appended latest change events and chronological histories to development logs.
+- Created '_index.au3' implementing background periodic crawlers triggered in small, zero-lag batch slices.
+- Placed indexing variables ('enabled', 'interval_ms', 'batch_size', 'ignore_dirs', 'ignore_guids') inside 'clipboard-exec.ini'.
+- Implemented robust regex matching for standard and partial GUIDs to exclude matching names.
+- Upgraded Search Picker launcher '_picker_demo.au3' to load the real crawled path indexes and route folders to Directory Opus.
 ```
 
 ## Log Entries
+
+## [2026-06-14T11:32:00Z]
+### 🎯 Primary Goals & Requirements
+- Maintain directory and file indexes on disk via periodic, incremental small-batch indexing sweeps.
+- Ignore specific folders (e.g., `node_modules`) and any folder/file names resembling full or partial GUID structures.
+- Place all controlling configurations inside the `[indexing]` section of `clipboard-exec.ini` for easy external customisation.
+- Integrate the compiled index file directly into the Search Picker GUI, opening selections automatically in Directory Opus.
+
+### 🛠️ Completed Changes in this Session
+- **Implemented Background Incremental Indexer**: Built `/modules/_index.au3` to maintain a memory path map and index queue. It processes directories in lightweight, non-blocking batch cycles (default: 10 folders per slice every 15 seconds), persisting the compiled structure to `clipboard-exec-index.txt`.
+- **Created INI Controlling Section**: Added a new `[indexing]` segment to `clipboard-exec.ini` allowing easy modification of crawl sleep intervals, batch size bounds, folder ignore strings, and GUID/file exclusion toggles.
+- **Formulated Robust GUID Filters**: Incorporated regular expressions inside `_Index_IsGuidPattern` to filter out files and directories with complete or partial GUID hashes (such as hex blocks joined by hyphens or enclosed within braces).
+- **Integrated Live Search Picker**: Upgraded `/modules/_picker_demo.au3` to load the live crawled index. Clicking or selecting a valid directory routes the location natively and instantly using the active Directory Opus instance via `_Handler_OpenInDOpus`.
+- **Synced Workflow Mandates**: Maintained logs in `/AILOG.md`, checked off completed tasks in `/AITASKS.md`, and compiled successfully with no lint or build errors.
+
+### 🔸 Affected Files
+- `/clipboard-exec.ini`
+- `/clipboard-exec.au3`
+- `/modules/_index.au3`
+- `/modules/_picker_demo.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
+
+## [2026-06-14T11:22:00Z]
+### 🎯 Primary Goals & Requirements
+- Enable file directory URLs (e.g. starting with `file:///` or `file://`) to act exactly like standard directory paths.
+- Route them cleanly to Directory Opus, resolving slashes and stripping protocol keywords.
+
+### 🛠️ Completed Changes in this Session
+- **Enhanced Evaluator Recognizer Matrix**: Extended pattern matches in `/modules/_recognizer.au3` so any clipboard strings starting with `file://` (with or without a leading open-new-tab `+` operator) are classified under the `DIRECTORY_FULL` routing target.
+- **Implemented URL Strip & Normalize Logic**: Added protocol stripping inside `_Handler_OpenInDOpus` (`/modules/_handler_dopus.au3`), converting forward slashes into backslashes, handling local disks and network shares elegantly, and verifying existence before trigger execution.
+- **Consolidated AI Workstates**: Synced checklists inside `/AITASKS.md`, updating progress to fully resolved.
+
+### 🔸 Affected Files
+- `/modules/_recognizer.au3`
+- `/modules/_handler_dopus.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
 
 ## [2026-06-14T11:15:00Z]
 ### 🎯 Primary Goals & Requirements

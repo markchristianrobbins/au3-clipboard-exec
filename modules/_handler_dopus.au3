@@ -20,6 +20,24 @@ Func _Handler_OpenInDOpus($sFullPath, $sType)
         $sCleanPath = StringStripWS(StringMid($sCleanPath, 2), 3) 
     EndIf
 
+    ; Parse and clean file:// URI structures if present
+    Local $bIsFileUrl = False
+    If StringLeft($sCleanPath, 8) == "file:///" Then
+        $sCleanPath = StringMid($sCleanPath, 9)
+        $bIsFileUrl = True
+    ElseIf StringLeft($sCleanPath, 7) == "file://" Then
+        $sCleanPath = StringMid($sCleanPath, 8)
+        $bIsFileUrl = True
+        ; For network shares (e.g., file://server/share), prepend double backslashes
+        If Not StringRegExp($sCleanPath, "^(?i)[a-z]:") Then
+            $sCleanPath = "\\" & $sCleanPath
+        EndIf
+    EndIf
+
+    If $bIsFileUrl Then
+        $sCleanPath = StringReplace($sCleanPath, "/", "\")
+    EndIf
+
     ; ORDER OF OPERATIONS FIX 2: Strip ALL trailing backslashes/forward slashes safely
     While StringRight($sCleanPath, 1) == "\" Or StringRight($sCleanPath, 1) == "/"
         $sCleanPath = StringTrimRight($sCleanPath, 1)

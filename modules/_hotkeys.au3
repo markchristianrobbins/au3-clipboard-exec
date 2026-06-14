@@ -321,7 +321,34 @@ Func _Hotkey_ClipOp()
             Local $sType = $aMeta[4]
             Local $iCount = Int($aMeta[5])
             
-            $aTokenDisplay[$i] = $sRaw & " (" & $sType & " - " & $iCount & " matches)"
+            ; Re-extract instances for inspection
+            Local $sInstances = ""
+            Local $iIdxLimit = $aMeta[0]
+            For $idx = 6 To $iIdxLimit
+                $sInstances &= $aMeta[$idx] & "|"
+            Next
+            If StringRight($sInstances, 1) == "|" Then $sInstances = StringTrimRight($sInstances, 1)
+            
+            ; Determine display type suffix
+            Local $sDisplayType = "dir"
+            If $sType == "WINDOW_MATCH" Or $sType == "WINDOW" Then
+                $sDisplayType = "window"
+            ElseIf $sType == "FILE" Or $sType == "PATH_DIRECT" Then
+                Local $sBaseWord = $aMeta[2]
+                If FileExists($sBaseWord) And (StringInStr(FileGetAttrib($sBaseWord), "D") == 0) Then
+                    $sDisplayType = "file"
+                EndIf
+            ElseIf $sType == "INDEX_MATCH" Then
+                Local $aInstTmp = StringSplit($sInstances, "|")
+                If $aInstTmp[0] >= 1 Then
+                    Local $sFirst = $aInstTmp[1]
+                    If FileExists($sFirst) And (StringInStr(FileGetAttrib($sFirst), "D") == 0) Then
+                        $sDisplayType = "file"
+                    EndIf
+                EndIf
+            EndIf
+            
+            $aTokenDisplay[$i] = $sRaw & " [" & $sDisplayType & "] (" & $iCount & " matches)"
         Next
         
         Local $sChosenDisplay = _Picker_ShowGUI($aTokenDisplay, "DECOMPOSED TOKENS PICKER", "")

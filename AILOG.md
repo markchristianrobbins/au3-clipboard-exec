@@ -15,14 +15,31 @@
 
 ## Commit Message
 ```text
-fix: resolve au3check compiler warning and function signature issues
+feat: implement advanced token type classification, window icons, and status details inside picker
 
-- Replaced undefined 'DirectoryExists' call with native 'FileExists' in '_index.au3'.
-- Added missing '#include "_index.au3"' inside '_recognizer.au3' to resolve '_Index_Initialize' and '_Index_LoadIndexedPaths'.
-- Verified complete clearance of potential '$g_g_iSelectedIndex' global state typo variables.
+- Dynamically classify decomposed line tokens as '[dir]', '[file]', or '[window]'.
+- Added on-the-fly extraction of program icons with PID mapping using '_WinAPI_GetProcessFileName'.
+- Embedded window processes, UI class descriptions, and exact file sizes directly into active status bar panel.
 ```
 
 ## Log Entries
+
+## [2026-06-14T12:15:00Z]
+### 🎯 Primary Goals & Requirements
+- Update the decomposition picker so that all items show their explicit types (`dir`, `file`, `window`).
+- Render the exact native application icon for windows on the list and show related process (.exe) and class detailed info on selection.
+
+### 🛠️ Completed Changes in this Session
+- **Integrated Explicit Classification Subtitle**: Created a type evaluation and suffixing pipeline in `/modules/_hotkeys.au3` to add explicit type tags to the multi-token picker options.
+- **Enabled Real-Time Window Icon Extractors**: Customized `/modules/_picker_render.au3` to resolve the process ID and get the full path name of the parent executable to set window rows' icon images dynamically.
+- **Engineered Comprehensive Profile Headers**: Added file size conversion, process filename detection, and Window class mapping inside the selected item status bar detail updater.
+- **Compiled Verification**: Confirmed that all modules build perfectly with zero errors or warnings under standard AutoIt wrappers.
+
+### 🔸 Affected Files
+- `/modules/_picker_render.au3`
+- `/modules/_hotkeys.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
 
 ## [2026-06-14T12:07:00Z]
 ### 🎯 Primary Goals & Requirements

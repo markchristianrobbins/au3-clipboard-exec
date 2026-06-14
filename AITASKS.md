@@ -49,6 +49,15 @@
 - [x] Fix undefined references:
     - Appended `#include "_index.au3"` into `_recognizer.au3` to resolve compiled bindings of `_Index_Initialize()` and `_Index_LoadIndexedPaths()`.
 
+## [x] Implement Advanced Token Classification on Decomposed Picker
+- [x] Integrate Explicit Item Types:
+    - Automatically classify and suffix discovered tokens as `[dir]`, `[file]`, or `[window]`.
+    - Display the item type visually inside the item row rendering (`[dir]`, `[file]`, or `[window]`) in place of default folder stats.
+- [x] Extract Real-Time Window Icons:
+    - If the item is a window, dynamically query its PID and file coordinate location to fetch its native application icon binary.
+- [x] Enhance Status Bar Detail:
+    - Show precise process names and window classes for active windows, and sizes for direct files, inside the active status details bar.
+
 ## [ ] New Changes
 - [ ] Migrate central app configurations inside `.ini` layouts to JSON
     - Define robust schemas for mapping application names to window behaviors.

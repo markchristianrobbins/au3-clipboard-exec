@@ -72,14 +72,30 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     $g_hRowFocusT = GUICtrlCreateLabel("", 0, 0, 1, 1)
     $g_hRowFocusB = GUICtrlCreateLabel("", 0, 0, 1, 1)
     
-    ; Create Virtual Scrollbar track and thumb labels
+    ; Create Virtual Scrollbar track, thumb, and arrow labels
     $g_hScrollTrack = GUICtrlCreateLabel("", 688, $iInputAreaHeight + 8, 4, ($iMaxDisplayRows * $iRowHeight))
     GUICtrlSetBkColor($g_hScrollTrack, 0x151515)
+    GUICtrlSetCursor($g_hScrollTrack, 0)
     GUICtrlSetState($g_hScrollTrack, $GUI_HIDE)
     
     $g_hScrollThumb = GUICtrlCreateLabel("", 687, $iInputAreaHeight + 8, 6, 20)
     GUICtrlSetBkColor($g_hScrollThumb, 0x4F4F4F)
+    GUICtrlSetCursor($g_hScrollThumb, 0)
     GUICtrlSetState($g_hScrollThumb, $GUI_HIDE)
+
+    $g_hScrollUp = GUICtrlCreateLabel("▲", 684, $iInputAreaHeight + 8, 12, 12, $SS_CENTER)
+    GUICtrlSetFont($g_hScrollUp, 7, 700, 0, "Segoe UI")
+    GUICtrlSetColor($g_hScrollUp, 0x4F4F4F)
+    GUICtrlSetBkColor($g_hScrollUp, $GUI_BKCOLOR_TRANSPARENT)
+    GUICtrlSetCursor($g_hScrollUp, 0)
+    GUICtrlSetState($g_hScrollUp, $GUI_HIDE)
+    
+    $g_hScrollDown = GUICtrlCreateLabel("▼", 684, $iInputAreaHeight + 8 + ($iMaxDisplayRows * $iRowHeight) - 12, 12, 12, $SS_CENTER)
+    GUICtrlSetFont($g_hScrollDown, 7, 700, 0, "Segoe UI")
+    GUICtrlSetColor($g_hScrollDown, 0x4F4F4F)
+    GUICtrlSetBkColor($g_hScrollDown, $GUI_BKCOLOR_TRANSPARENT)
+    GUICtrlSetCursor($g_hScrollDown, 0)
+    GUICtrlSetState($g_hScrollDown, $GUI_HIDE)
     
     $g_hNoResults = GUICtrlCreateLabel("No matching directories found in index map", $iRowX, $iInputAreaHeight + 14, $iRowWidth, 36, BitOR($SS_CENTER, $SS_CENTERIMAGE))
     GUICtrlSetFont($g_hNoResults, 10, 400, 2, "Segoe UI")
@@ -91,6 +107,7 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     _Picker_GUISetUpAccelerators($g_hPickerGUI, $g_hDUp, $g_hDDown, $g_hDPgUp, $g_hDPgDn, $g_hDHome, $g_hDEnd, $g_hDEnter, $g_hDCtrlEnter, $g_hDEscape, $g_hDCopy, $g_hDBackspace, $g_hDCtrlBS, $g_hDCtrlInsert, $g_hDAltH, $g_hDAltM, $g_hDApps, $g_hDF1)
     
     GUIRegisterMsg(0x007B, "_Picker_WM_CONTEXTMENU")
+    GUIRegisterMsg(0x020A, "_Picker_WM_MOUSEWHEEL")
     
     GUISetState(@SW_SHOW, $g_hPickerGUI)
     WinActivate($g_hPickerGUI)
@@ -243,6 +260,7 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     If IsDeclared("oGrandchildCount") Then $oGrandchildCount.RemoveAll()
     
     GUIRegisterMsg(0x007B, "")
+    GUIRegisterMsg(0x020A, "")
     GUIDelete($g_hPickerGUI)
     Return $g_sSelectedPath
 EndFunc

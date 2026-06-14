@@ -229,15 +229,30 @@ Func _Picker_UpdateScrollbar($iInputAreaHeight, $iRowHeight, $iMaxDisplayRows)
     If $iTotalItems <= $iMaxDisplayRows Then
         GUICtrlSetState($g_hScrollTrack, $GUI_HIDE)
         GUICtrlSetState($g_hScrollThumb, $GUI_HIDE)
+        If IsDeclared("g_hScrollUp") And $g_hScrollUp <> 0 Then GUICtrlSetState($g_hScrollUp, $GUI_HIDE)
+        If IsDeclared("g_hScrollDown") And $g_hScrollDown <> 0 Then GUICtrlSetState($g_hScrollDown, $GUI_HIDE)
         Return
     EndIf
     
-    Local $iTrackHeight = $g_iDisplayCount * $iRowHeight
-    GUICtrlSetPos($g_hScrollTrack, 688, $iInputAreaHeight + 8, 4, $iTrackHeight)
+    Local $iFullAreaHeight = $g_iDisplayCount * $iRowHeight
+    Local $iTrackTop = $iInputAreaHeight + 8 + 14
+    Local $iTrackHeight = $iFullAreaHeight - 28
+    If $iTrackHeight < 20 Then $iTrackHeight = 20
+    
+    GUICtrlSetPos($g_hScrollTrack, 688, $iTrackTop, 4, $iTrackHeight)
     GUICtrlSetState($g_hScrollTrack, $GUI_SHOW)
     
+    If IsDeclared("g_hScrollUp") And $g_hScrollUp <> 0 Then
+        GUICtrlSetPos($g_hScrollUp, 684, $iInputAreaHeight + 8, 12, 12)
+        GUICtrlSetState($g_hScrollUp, $GUI_SHOW)
+    EndIf
+    If IsDeclared("g_hScrollDown") And $g_hScrollDown <> 0 Then
+        GUICtrlSetPos($g_hScrollDown, 684, $iInputAreaHeight + 8 + $iFullAreaHeight - 12, 12, 12)
+        GUICtrlSetState($g_hScrollDown, $GUI_SHOW)
+    EndIf
+    
     Local $iThumbHeight = ($iMaxDisplayRows / $iTotalItems) * $iTrackHeight
-    If $iThumbHeight < 20 Then $iThumbHeight = 20
+    If $iThumbHeight < 16 Then $iThumbHeight = 16
     If $iThumbHeight > $iTrackHeight Then $iThumbHeight = $iTrackHeight
     
     Local $iMaxOffset = $iTotalItems - $iMaxDisplayRows
@@ -247,7 +262,7 @@ Func _Picker_UpdateScrollbar($iInputAreaHeight, $iRowHeight, $iMaxDisplayRows)
         $iThumbTopOffset = $fScrollFraction * ($iTrackHeight - $iThumbHeight)
     EndIf
     
-    Local $iThumbAbsoluteTop = $iInputAreaHeight + 8 + $iThumbTopOffset
+    Local $iThumbAbsoluteTop = $iTrackTop + $iThumbTopOffset
     GUICtrlSetPos($g_hScrollThumb, 687, $iThumbAbsoluteTop, 6, $iThumbHeight)
     GUICtrlSetState($g_hScrollThumb, $GUI_SHOW)
 EndFunc

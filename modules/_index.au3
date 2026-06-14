@@ -19,9 +19,7 @@ Func _Index_Initialize()
     $g_oIndexMap = ObjCreate("Scripting.Dictionary")
     $g_oIndexMap.CompareMode = 1
     
-    Local $sIndexFilePath = @ScriptDir & "\..\clipboard-exec-index.txt"
-    If Not FileExists($sIndexFilePath) Then $sIndexFilePath = @ScriptDir & "\clipboard-exec-index.txt"
-    If Not FileExists($sIndexFilePath) Then $sIndexFilePath = "clipboard-exec-index.txt"
+    Local $sIndexFilePath = _Index_GetIndexPath()
     
     If FileExists($sIndexFilePath) Then
         Local $hFile = FileOpen($sIndexFilePath, 0) ; Read mode
@@ -193,8 +191,7 @@ Func _Index_SaveIndexToDisk()
     Local $aKeys = $g_oIndexMap.Keys()
     _ArraySort($aKeys)
     
-    Local $sIndexFilePath = @ScriptDir & "\..\clipboard-exec-index.txt"
-    If Not FileExists(@ScriptDir & "\..\") Then $sIndexFilePath = @ScriptDir & "\clipboard-exec-index.txt"
+    Local $sIndexFilePath = _Index_GetIndexPath()
     
     Local $hFile = FileOpen($sIndexFilePath, 2) ; Overwrite mode
     If $hFile <> -1 Then
@@ -291,4 +288,21 @@ Func _Index_ForceReload()
     _Index_SaveIndexToDisk()
     _UI_ShowToast("Index Reloaded", "Successfully crawled & saved " & $iCount & " directories to disk.")
 EndFunc
+
+; ==============================================================================
+; Public API Helper: Locates clipboard-exec-index.txt directly next to clipboard-exec.au3
+; ==============================================================================
+Func _Index_GetIndexPath()
+    Local $sDir = @ScriptDir
+    If StringRight($sDir, 1) == "\" Then $sDir = StringTrimRight($sDir, 1)
+    If Not FileExists($sDir & "\clipboard-exec.au3") Then
+        If FileExists($sDir & "\..\clipboard-exec.au3") Then
+            $sDir &= "\.."
+        ElseIf FileExists($sDir & "\..\..\clipboard-exec.au3") Then
+            $sDir &= "\..\.."
+        EndIf
+    EndIf
+    Return $sDir & "\clipboard-exec-index.txt"
+EndFunc
+
 

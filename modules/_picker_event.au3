@@ -249,6 +249,66 @@ Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
         Case $iMsg == $g_hDF1
             _Picker_ShowHelpGUI($g_hPickerGUI)
 
+        Case $iMsg == $g_hScrollUp
+            _Picker_ScrollBy(-1)
+            
+        Case $iMsg == $g_hScrollDown
+            _Picker_ScrollBy(1)
+            
+        Case $iMsg == $g_hScrollTrack
+            Local $aCursorInfo = GUIGetCursorInfo($g_hPickerGUI)
+            If IsArray($aCursorInfo) Then
+                Local $iClickY = $aCursorInfo[1]
+                Local $iTrackTop = $iInputAreaHeight + 8 + 14
+                Local $iTrackHeight = ($g_iDisplayCount * $iRowHeight) - 28
+                If $iTrackHeight > 0 Then
+                    Local $fFraction = ($iClickY - $iTrackTop) / $iTrackHeight
+                    If $fFraction < 0 Then $fFraction = 0
+                    If $fFraction > 1 Then $fFraction = 1
+                    
+                    Local $iTotalItems = UBound($g_aFilteredPaths)
+                    Local $iMaxScrollOffset = $iTotalItems - $iMaxDisplayRows
+                    If $iMaxScrollOffset < 0 Then $iMaxScrollOffset = 0
+                    
+                    Local $iTargetOffset = Round($fFraction * $iMaxScrollOffset)
+                    _Picker_ScrollTo($iTargetOffset)
+                EndIf
+            EndIf
+            
+        Case $iMsg == $g_hScrollThumb
+            Local $aCursorInfo = GUIGetCursorInfo($g_hPickerGUI)
+            If IsArray($aCursorInfo) Then
+                Local $iInitialMouseY = $aCursorInfo[1]
+                Local $iInitialScrollOffset = $g_iScrollOffset
+                Local $iTrackHeight = ($g_iDisplayCount * $iRowHeight) - 28
+                
+                Local $iTotalItems = UBound($g_aFilteredPaths)
+                Local $iMaxScrollOffset = $iTotalItems - $iMaxDisplayRows
+                If $iMaxScrollOffset < 0 Then $iMaxScrollOffset = 0
+                
+                Local $iThumbHeight = ($iMaxDisplayRows / $iTotalItems) * $iTrackHeight
+                If $iThumbHeight < 16 Then $iThumbHeight = 16
+                If $iThumbHeight > $iTrackHeight Then $iThumbHeight = $iTrackHeight
+                
+                Local $iScrollRangePixels = $iTrackHeight - $iThumbHeight
+                If $iScrollRangePixels > 0 Then
+                    While 1
+                        Local $aDragInfo = GUIGetCursorInfo($g_hPickerGUI)
+                        If Not IsArray($aDragInfo) Or $aDragInfo[2] == 0 Then ExitLoop ; Left mouse released
+                        
+                        Local $iCurrentMouseY = $aDragInfo[1]
+                        Local $iDeltaY = $iCurrentMouseY - $iInitialMouseY
+                        
+                        Local $fItemDelta = ($iDeltaY / $iScrollRangePixels) * $iMaxScrollOffset
+                        Local $iNewOffset = Round($iInitialScrollOffset + $fItemDelta)
+                        
+                        _Picker_ScrollTo($iNewOffset)
+                        
+                        Sleep(10)
+                    WEnd
+                EndIf
+            EndIf
+
         Case Else
             _Picker_HandleKeyPress($iMsg, $aAllMatches)
             For $i = 1 To $g_iDisplayCount
@@ -312,6 +372,58 @@ Func _Picker_WM_CONTEXTMENU($hWnd, $iMsg, $wParam, $lParam)
         EndIf
     EndIf
     Return "GUI_RUNDEFMSG"
+EndFunc
+
+; ==============================================================================
+; Public API: Handles the WM_MOUSEWHEEL Win32 message for scroll events
+; ==============================================================================
+Func _Picker_WM_MOUSEWHEEL($hWnd, $iMsg, $wParam, $lParam)
+    #forceref $iMsg, $lParam
+    If $hWnd <> $g_hPickerGUI Then Return "GUI_RUNDEFMSG"
+    
+    Local $iDelta = BitShift($wParam, 16)
+    If BitAND($iDelta, 0x8000) Then $iDelta = BitOR($iDelta, 0xFFFF0000)
+    
+    If $iDelta > 0 Then
+        _Picker_ScrollBy(-3) ; Scroll Up 3 rows
+    ElseIf $iDelta < 0 Then
+        _Picker_ScrollBy(3)  ; Scroll Down 3 rows
+    EndIf
+    
+    Return 0
+EndFunc
+
+; ==============================================================================
+; Public API Helper: Relocates viewport offset to an absolute index coordinates point
+; ==============================================================================
+Func _Picker_ScrollTo($iTargetOffset)
+    Local $iMaxDisplayRows = UBound($g_aRowBg) - 1
+    Local $iTotalItems = UBound($g_aFilteredPaths)
+    Local $iMaxScrollOffset = $iTotalItems - $iMaxDisplayRows
+    If $iMaxScrollOffset < 0 Then $iMaxScrollOffset = 0
+    
+    Local $iOldScrollOffset = $g_iScrollOffset
+    $g_iScrollOffset = $iTargetOffset
+    If $g_iScrollOffset < 0 Then $g_iScrollOffset = 0
+    If $g_iScrollOffset > $iMaxScrollOffset Then $g_iScrollOffset = $iMaxScrollOffset
+    
+    If $g_iScrollOffset <> $iOldScrollOffset Then
+        Local $iInputAreaHeight = 124
+        _Picker_RenderVisibleList($g_aRowIcon, $g_aRowIdxCtrl, $g_aRowBorder, $g_aRowBg, $g_aRowPre, $g_aRowMatch, $g_aRowPost, $g_aRowPath, $g_aRowDepthInfo, $g_aFilteredPaths, GUICtrlRead($g_hInputField), $g_iDisplayCount, $g_iSelectedIndex, $g_iScrollOffset, $iMaxDisplayRows, $g_iRecentCount, $g_bExploreMode, $g_sExploreDir, $iInputAreaHeight)
+        
+        Local $iActiveTop = $iInputAreaHeight + 8 + ($g_iSelectedIndex * 42)
+        Local $iRowWidth = 670, $iRowX = 15
+        Local $iSpecColor = _Picker_GetBaseColor(_Picker_GetBaseName($g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]))
+        _Picker_UpdateFocusBorder($g_hRowFocusL, $g_hRowFocusR, $g_hRowFocusT, $g_hRowFocusB, $iRowX, $iActiveTop, $iRowWidth, $iSpecColor, True)
+        _Picker_UpdateStatusText($g_hStatusText, $g_hStatusBg, $g_aFilteredPaths, $g_iSelectedIndex, $g_iScrollOffset, $g_bExploreMode, $g_sExploreDir, UBound($g_aFilteredPaths) - $g_iRecentCount, $g_iRecentCount)
+    EndIf
+EndFunc
+
+; ==============================================================================
+; Public API Helper: Shifts viewport offset up/down by a given offset increment delta
+; ==============================================================================
+Func _Picker_ScrollBy($iDeltaOffset)
+    _Picker_ScrollTo($g_iScrollOffset + $iDeltaOffset)
 EndFunc
 
 ; End of file: _picker_event.au3

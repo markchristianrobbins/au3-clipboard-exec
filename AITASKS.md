@@ -121,6 +121,16 @@
     - Created a modal HUD triggered by the F1 key, displaying standard shortcut combinations and command descriptions clearly.
 - [x] Dynamic menu option allocation bounds fix
     - Corrected `$aTempList` allocation bounds inside `_picker_mini.au3` to size dynamically according to `UBound($aOptions)`, solving the out-of-bounds error on fuzzy queries.
+- [x] Robust index database path alignment
+    - Corrected indexing paths in `/modules/_index.au3` to save and load index metrics directly to `C:\_\au3-clipboard-exec\clipboard-exec-index.txt` instead of parent folders.
+- [x] Enforce index path alongside clipboard-exec.au3
+    - Designed `_Index_GetIndexPath()` searcher that guarantees the `clipboard-exec-index.txt` database lives in the same folder as `clipboard-exec.au3` even when sub-modules are evaluated.
+- [x] Mousewheel list scrolling
+    - Registered custom Win32 `WM_MOUSEWHEEL` message callback to scroll list offsets upwards/downwards by 3 rows per wheel notch.
+- [x] Seamless virtual scrollbar thumb drag and background click interactions
+    - Implemented click-and-drag mouse tracking loops for the virtual scroll thumb and absolute scroll-to paging for clicks on the scroll track background.
+- [x] Interactive high-contrast scrollbar up/down arrow buttons
+    - Built and styled compact indicator arrows ("▲" and "▼") at the top/bottom of the scroll track and mapped clicks to scroll line-by-line.
 
 ## [ ] New Settings
 - [ ] `sendkeys` under `[Cursor]` profile

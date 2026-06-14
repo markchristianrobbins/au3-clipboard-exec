@@ -15,18 +15,31 @@
 
 ## Commit Message
 ```text
-feat: integrate virtual scrollbar, F1 help window overlay, compact menu-like options picker, start-up active window focus, and Apps key beep signal
+feat(scroller): implement mousewheel list scroll, virtual scrollbar thumb dragging, background click paging, interactive up/down arrows, and directory-correct index file placement
 
-- Embedded a high-contrast virtual scrollbar updating track and thumb label coordinates responsively on list navigation.
-- Created `/modules/_picker_help.au3` and mapped the F1 accelerator key to display a customized HUD listing shortcuts and commands.
-- Revamped the searchable options mini-picker layout (300px width, menu-like rows, no titlebar) and added "Activate" as the top action.
-- Pre-loaded active window handles at startup to focus corresponding window elements instantly with scroll offsets applied.
-- Bound a native high-frequency beep signal to the Apps menu hotkey hook.
-- Added full suffix tag trimming to Directory Opus and combined-selection double-click events, allowing instant local navigation.
-- Fixed an array subscript out of bounds crash in the mini-picker's fuzzy-query logic by sizing the match list dynamically based on UBound($aOptions).
+- Integrated a custom WM_MOUSEWHEEL event callback that scrolls option listings by 3 rows per wheel notch.
+- Created click-and-drag mouse tracking loops for the custom virtual scroll thumb.
+- Added absolute scroll-to pagination mapping click coordinates relative to the scroll track background.
+- Created and styled clickable Up/Down indicator arrows ("▲" and "▼") at the top/bottom of the scroll track.
+- Replaced hard-coded indexing file lookups in `/modules/_index.au3` with a robust `_Index_GetIndexPath()` searcher that guarantees the index remains directly next to `clipboard-exec.au3`.
 ```
 
 ## Log Entries
+
+## [2026-06-14T21:55:00Z]
+### 🎯 Primary Goals & Requirements
+- Implement mousewheel list scrolling inside the primary search picker.
+- Enable clicking and dragging on the custom virtual scrollbar thumb to scroll through listings.
+- Enable clicking on the scrollbar track background to page/jump to that list coordinate position.
+- Add working scroll indicator arrows ("▲" and "▼") at the top and bottom of the scroll track.
+- Verify and make sure that the index database `clipboard-exec-index.txt` is always stored next to `clipboard-exec.au3`.
+
+### 🛠️ Completed Changes in this Session
+- **WM_MOUSEWHEEL Support (`/modules/_picker.au3`, `/modules/_picker_event.au3`)**: Custom-registered the standard Win32 `WM_MOUSEWHEEL` (0x020A) message handle and wired the scroll count to increment/decrement display offsets dynamically.
+- **Scrollbar Thumb Drag Tracking (`/modules/_picker_event.au3`)**: Implemented mouse drag capture within the message loop; when clicking down on the thumb, we enter a lightweight drag polling loop that translates pixel distances to list items seamlessly.
+- **Track Background Click Navigation (`/modules/_picker_event.au3`)**: Captured track background click messages, retrieved GUI cursor coordinates via `GUIGetCursorInfo()`, and mapped clicked ratios to the corresponding database offsets.
+- **Interactive Scrollbar Arrows (`/modules/_picker.au3`, `/modules/_picker_render.au3`, `/modules/_picker_event.au3`)**: Created labels for Up/Down arrows ("▲" and "▼") and integrated their handlers. Replaced the static scroll positions inside `_Picker_UpdateScrollbar` to scale within arrow boundaries of the track area.
+- **Safer Directory-Correct Index Resolution (`/modules/_index.au3`)**: Replaced raw string manipulations for `clipboard-exec-index.txt` with `_Index_GetIndexPath()`, keeping files organized beside `clipboard-exec.au3` dynamically.
 
 ## [2026-06-14T20:50:00Z]
 ### 🎯 Primary Goals & Requirements
@@ -46,6 +59,7 @@ feat: integrate virtual scrollbar, F1 help window overlay, compact menu-like opt
 - **Custom Shortcut Help HUD (`/modules/_picker_help.au3`)**: Implemented a standalone modal help drawer illustrating keybind tables and commands, mapped to the `{F1}` shortcut.
 - **Shorcut Audio Beeper (`/modules/_picker_event.au3`)**: Configured a clear `Beep(800, 150)` tone to fire whenever the Applications context menu key is pressed.
 - **Robust Suffix and Class Slicers (`/modules/_handler_dopus.au3`)**: Injected regex trims to prevent tag indicators like ` [dir]` or ` [window]` from interfering with Opus local folder listings or application routing.
+- **Index Database Folder Resolution (`/modules/_index.au3`)**: Changed file generation resolution of `clipboard-exec-index.txt` to lock exclusively onto `@ScriptDir` (with structural nested `modules` module offsets), satisfying index persistence requirements.
 
 ### 🔸 Affected Files
 - `/modules/_picker_help.au3`

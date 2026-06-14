@@ -15,16 +15,25 @@
 
 ## Commit Message
 ```text
-feat(scroller): implement mousewheel list scroll, virtual scrollbar thumb dragging, background click paging, interactive up/down arrows, and directory-correct index file placement
+feat(index): ensure automatic index file initialization and fix root indexing dirty state behavior
 
-- Integrated a custom WM_MOUSEWHEEL event callback that scrolls option listings by 3 rows per wheel notch.
-- Created click-and-drag mouse tracking loops for the custom virtual scroll thumb.
-- Added absolute scroll-to pagination mapping click coordinates relative to the scroll track background.
-- Created and styled clickable Up/Down indicator arrows ("▲" and "▼") at the top/bottom of the scroll track.
-- Replaced hard-coded indexing file lookups in `/modules/_index.au3` with a robust `_Index_GetIndexPath()` searcher that guarantees the index remains directly next to `clipboard-exec.au3`.
+- Configured _Index_Initialize to auto-create an empty `clipboard-exec-index.txt` on application startup if it is not present.
+- Adjusted the position of the reset for `$g_bIndexDirty = False` in `_Index_ProcessQueueBatch`, resolving a bug where new root directory registers were not saved to disk during the first scan.
 ```
 
 ## Log Entries
+
+## [2026-06-14T22:37:00Z]
+### 🎯 Primary Goals & Requirements
+- Guarantee physical creation of the index file `clipboard-exec-index.txt` on execution.
+- Fix root folder crawl caching where initial indexing is not flushed to disk because the global dirty flag gets reset.
+
+### 🛠️ Completed Changes in this Session
+- **Index Auto-Creation (`/modules/_index.au3`)**: Added checks in `_Index_Initialize` to immediately write a blank file for `clipboard-exec-index.txt` if absent, ensuring users see the file next to `clipboard-exec.au3`.
+- **Dirty Flag Reset Alignment (`/modules/_index.au3`)**: Reset `$g_bIndexDirty = False` at the beginning of the queue evaluation execution flow rather than after loading configured root paths, ensuring new paths trigger immediate disk writing on crawl.
+
+### 🔸 Affected Files
+- `/modules/_index.au3`
 
 ## [2026-06-14T21:55:00Z]
 ### 🎯 Primary Goals & Requirements

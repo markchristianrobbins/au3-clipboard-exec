@@ -123,6 +123,9 @@
     - Corrected `$aTempList` allocation bounds inside `_picker_mini.au3` to size dynamically according to `UBound($aOptions)`, solving the out-of-bounds error on fuzzy queries.
 - [x] Robust index database path alignment
     - Corrected indexing paths in `/modules/_index.au3` to save and load index metrics directly to `C:\_\au3-clipboard-exec\clipboard-exec-index.txt` instead of parent folders.
+- [x] Ensure index file creation on start and fix root dirty flag clobbering
+    - Configured `_Index_Initialize` to auto-create `clipboard-exec-index.txt` on startup if it is missing, guaranteeing the file is always created.
+    - Moved `$g_bIndexDirty = False` before crawling configured root paths to prevent clobbering the dirty state, allowing newly found root folders to trigger a save.
 - [x] Enforce index path alongside clipboard-exec.au3
     - Designed `_Index_GetIndexPath()` searcher that guarantees the `clipboard-exec-index.txt` database lives in the same folder as `clipboard-exec.au3` even when sub-modules are evaluated.
 - [x] Mousewheel list scrolling

@@ -21,6 +21,15 @@ Func _Index_Initialize()
     
     Local $sIndexFilePath = _Index_GetIndexPath()
     
+    ; Auto-create index file if it does not exist so it is always present
+    If Not FileExists($sIndexFilePath) Then
+        Local $hFileNew = FileOpen($sIndexFilePath, 2) ; Overwrite/Create mode
+        If $hFileNew <> -1 Then
+            FileWrite($hFileNew, "")
+            FileClose($hFileNew)
+        EndIf
+    EndIf
+    
     If FileExists($sIndexFilePath) Then
         Local $hFile = FileOpen($sIndexFilePath, 0) ; Read mode
         If $hFile <> -1 Then
@@ -64,6 +73,8 @@ Func _Index_ProcessQueueBatch()
     
     Local $aIgnoreDirs = StringSplit($sIgnoreDirsStr, ";")
     
+    $g_bIndexDirty = False
+    
     ; 2. If the scanner queue is currently empty, query sections and initialize root crawl states
     If UBound($g_aIndexQueue) == 0 Then
         Local $aRootSections = IniReadSection($sConfigIni, "index-paths")
@@ -85,7 +96,6 @@ Func _Index_ProcessQueueBatch()
     If UBound($g_aIndexQueue) == 0 Then Return
     
     Local $iProcessed = 0
-    $g_bIndexDirty = False
     
     While $iProcessed < $iBatchSize And UBound($g_aIndexQueue) > 0
         Local $sCurrentDir = $g_aIndexQueue[0]

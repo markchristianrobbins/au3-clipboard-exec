@@ -408,82 +408,16 @@ EndFunc
 Func _Hotkey_WinCtrlAltEnter()
     _Util_PlaySystemSound(0x00000000)
     
-    ; 1. Load directory paths from index
-    _Index_Initialize()
-    Local $aDirs = _Index_LoadIndexedPaths()
-    If UBound($aDirs) == 0 Or (UBound($aDirs) == 1 And $aDirs[0] == "") Then
-        ; Fallback to sample base paths if index database is unpopulated or missing
-        Local $aFallback[4] = ["C:\", "D:\", @MyDocumentsDir, @UserProfileDir]
-        $aDirs = $aFallback
-    EndIf
+    $g_bIsCombinedPicker = True
     
-    ; 2. Extract active and visible windows
-    Local $aWinList = WinList()
-    Local $aWindows[UBound($aWinList)]
-    Local $iWinCount = 0
-    Local $oSeenWins = ObjCreate("Scripting.Dictionary")
-    $oSeenWins.CompareMode = 1
+    Local $aCombinedList
+    _Picker_RebuildCombinedMatches($aCombinedList)
     
-    For $i = 1 To $aWinList[0][0]
-        Local $sTitle = $aWinList[$i][0]
-        Local $hWnd = $aWinList[$i][1]
-        
-        ; Verify if window is an overlapped window, has title, and is not a system background task or our own GUI
-        If $sTitle <> "" And $sTitle <> "Program Manager" And $hWnd <> $g_hPickerGUI And _Util_IsOverlappedWindow($hWnd) Then
-            Local $iState = WinGetState($hWnd)
-            Local $bIsVisible = (BitAND($iState, 2) > 0)
-            Local $bIsMinimized = (BitAND($iState, 16) > 0)
-            
-            Local $sSuffix = " [window]"
-            If Not $bIsVisible And $bIsMinimized Then
-                $sSuffix = " [window: minimized & hidden]"
-            ElseIf Not $bIsVisible Then
-                $sSuffix = " [window: hidden]"
-            ElseIf $bIsMinimized Then
-                $sSuffix = " [window: minimized]"
-            EndIf
-            
-            Local $sItemTitle = $sTitle & $sSuffix
-            If Not $oSeenWins.Exists(StringLower($sItemTitle)) Then
-                $oSeenWins.Add(StringLower($sItemTitle), 1)
-                $aWindows[$iWinCount] = $sItemTitle
-                $iWinCount += 1
-            EndIf
-        EndIf
-    Next
-    If $iWinCount > 0 Then ReDim $aWindows[$iWinCount]
-    
-    Local $iDirsCount = UBound($aDirs)
-    Local $aFormattedDirs[$iDirsCount]
-    Local $iDirCount = 0
-    For $i = 0 To $iDirsCount - 1
-        If $aDirs[$i] <> "" Then
-            $aFormattedDirs[$iDirCount] = $aDirs[$i] & " [dir]"
-            $iDirCount += 1
-        EndIf
-    Next
-    If $iDirCount > 0 Then ReDim $aFormattedDirs[$iDirCount]
-    
-    ; 3. Combine both collections into a single picker list
-    Local $iTotalSize = $iWinCount + $iDirCount
-    If $iTotalSize == 0 Then
-        _UI_ShowToast("Clipboard Exec", "No open windows or indexed directories discovered.")
-        Return
-    EndIf
-    
-    Local $aCombinedList[$iTotalSize]
-    Local $iCombIdx = 0
-    For $i = 0 To $iWinCount - 1
-        $aCombinedList[$iCombIdx] = $aWindows[$i]
-        $iCombIdx += 1
-    Next
-    For $i = 0 To $iDirCount - 1
-        $aCombinedList[$iCombIdx] = $aFormattedDirs[$i]
-        $iCombIdx += 1
-    Next
-    
-    ; 4. Present combined Search Picker GUI
+    ; Present combined Search Picker GUI
     Local $sResult = _Picker_ShowGUI($aCombinedList, "WINDOWS AND DIRECTORIES INTUITIVE PICKER", "")
+    
+    $g_bIsCombinedPicker = False
+    
     If $sResult == "" Then Return
     
     ; 5. Route selection
@@ -496,7 +430,7 @@ Func _Hotkey_WinCtrlAltEnter()
             _UI_ShowToast("Activated Window", "Routed focus to window: " & $sCleanWin)
         Else
             _UI_ShowToast("Action Error", "Unable to target window: " & $sCleanWin)
-        EndIf
+        Endif
     Else
         ; Must be directory path. Clean suffix.
         Local $sCleanDir = StringRegExpReplace($sResult, "(?i)\s+\[dir\]\s*$", "")

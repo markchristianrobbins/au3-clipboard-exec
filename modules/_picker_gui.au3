@@ -51,31 +51,49 @@ Func _Picker_GUICreateTitleAndStatus($iMenuWidth, $sTitleTextStr, ByRef $hTitleB
     GUICtrlSetBkColor($hTitleText, $GUI_BKCOLOR_TRANSPARENT)
     GUICtrlSetResizing($hTitleText, $GUI_DOCKALL)
     
-    $hStatusBg = GUICtrlCreateLabel("", 15, 34, $iMenuWidth - 30, 20)
-    GUICtrlSetBkColor($hStatusBg, 0x1A1A1A)
+    $hStatusBg = GUICtrlCreateLabel("", 15, 54, $iMenuWidth - 30, 20)
+    GUICtrlSetBkColor($hStatusBg, 0x151515)
     GUICtrlSetResizing($hStatusBg, $GUI_DOCKALL)
     GUICtrlSetState($hStatusBg, $GUI_DISABLE)
     
-    $hStatusText = GUICtrlCreateLabel("", 20, 36, $iMenuWidth - 40, 16)
+    $hStatusText = GUICtrlCreateLabel("", 20, 56, $iMenuWidth - 40, 16)
     GUICtrlSetFont($hStatusText, 8, 400, 0, "Segoe UI")
     GUICtrlSetColor($hStatusText, 0x888888)
     GUICtrlSetBkColor($hStatusText, $GUI_BKCOLOR_TRANSPARENT)
     GUICtrlSetResizing($hStatusText, $GUI_DOCKALL)
 EndFunc
 
+Func _Picker_GUICreateToolbar($iMenuWidth, ByRef $hToolbarBg, ByRef $hToolbarText, ByRef $hDAltH, ByRef $hDAltM, ByRef $hDApps)
+    $hToolbarBg = GUICtrlCreateLabel("", 15, 34, $iMenuWidth - 30, 20)
+    GUICtrlSetBkColor($hToolbarBg, 0x1A1A1A)
+    GUICtrlSetResizing($hToolbarBg, $GUI_DOCKALL)
+    GUICtrlSetState($hToolbarBg, $GUI_DISABLE)
+    
+    $hToolbarText = GUICtrlCreateLabel("", 20, 36, $iMenuWidth - 40, 16)
+    GUICtrlSetFont($hToolbarText, 8, 400, 0, "Segoe UI")
+    GUICtrlSetColor($hToolbarText, 0xBBBBBB)
+    GUICtrlSetBkColor($hToolbarText, $GUI_BKCOLOR_TRANSPARENT)
+    GUICtrlSetResizing($hToolbarText, $GUI_DOCKALL)
+    GUICtrlSetCursor($hToolbarText, 0)
+    
+    $hDAltH = GUICtrlCreateDummy()
+    $hDAltM = GUICtrlCreateDummy()
+    $hDApps = GUICtrlCreateDummy()
+EndFunc
+
 Func _Picker_GUICreateInputField($iMenuWidth, $sSearchQueryText, ByRef $hInputBg, ByRef $hInputField, ByRef $hDivider)
-    $hInputBg = GUICtrlCreateLabel("", 15, 58, $iMenuWidth - 30, 36)
+    $hInputBg = GUICtrlCreateLabel("", 15, 78, $iMenuWidth - 30, 36)
     GUICtrlSetBkColor($hInputBg, 0x252526)
     GUICtrlSetState($hInputBg, $GUI_DISABLE)
     GUICtrlSetResizing($hInputBg, $GUI_DOCKALL)
 
-    $hInputField = GUICtrlCreateInput($sSearchQueryText, 25, 64, $iMenuWidth - 50, 24, $ES_AUTOHSCROLL)
+    $hInputField = GUICtrlCreateInput($sSearchQueryText, 25, 84, $iMenuWidth - 50, 24, $ES_AUTOHSCROLL)
     GUICtrlSetFont($hInputField, 11, 400, 0, "Segoe UI")
     GUICtrlSetColor($hInputField, 0xFFFFFF)
     GUICtrlSetBkColor($hInputField, 0x252526)
     GUICtrlSetResizing($hInputField, $GUI_DOCKALL)
 
-    $hDivider = GUICtrlCreateLabel("", 15, 102, $iMenuWidth - 30, 1)
+    $hDivider = GUICtrlCreateLabel("", 15, 122, $iMenuWidth - 30, 1)
     GUICtrlSetBkColor($hDivider, 0x3F3F46)
     GUICtrlSetState($hDivider, $GUI_DISABLE)
     GUICtrlSetResizing($hDivider, $GUI_DOCKALL)
@@ -139,7 +157,7 @@ Func _Picker_GUICreateRowPool($iMaxDisplayRows, $iInputAreaHeight, $iRowHeight, 
     Next
 EndFunc
 
-Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPgUp, ByRef $hDPgDn, ByRef $hDHome, ByRef $hDEnd, ByRef $hDEnter, ByRef $hDCtrlEnter, ByRef $hDEscape, ByRef $hDCopy, ByRef $hDBackspace, ByRef $hDCtrlBS, ByRef $hDCtrlInsert)
+Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPgUp, ByRef $hDPgDn, ByRef $hDHome, ByRef $hDEnd, ByRef $hDEnter, ByRef $hDCtrlEnter, ByRef $hDEscape, ByRef $hDCopy, ByRef $hDBackspace, ByRef $hDCtrlBS, ByRef $hDCtrlInsert, ByRef $hDAltH, ByRef $hDAltM, ByRef $hDApps)
     $hDUp = GUICtrlCreateDummy()
     $hDDown = GUICtrlCreateDummy()
     $hDPgUp = GUICtrlCreateDummy()
@@ -153,6 +171,9 @@ Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPg
     $hDBackspace = GUICtrlCreateDummy()
     $hDCtrlBS = GUICtrlCreateDummy()
     $hDCtrlInsert = GUICtrlCreateDummy()
+    $hDAltH = GUICtrlCreateDummy()
+    $hDAltM = GUICtrlCreateDummy()
+    $hDApps = GUICtrlCreateDummy()
 
     Local $aAccelTable = [ _
         [ "{DOWN}", $hDDown ], _
@@ -167,7 +188,11 @@ Func _Picker_GUISetUpAccelerators($hWnd, ByRef $hDUp, ByRef $hDDown, ByRef $hDPg
         [ "{BS}", $hDBackspace ], _
         [ "^{BS}", $hDCtrlBS ], _
         [ "^c", $hDCopy ], _
-        [ "^{INSERT}", $hDCtrlInsert ] _
+        [ "^{INSERT}", $hDCtrlInsert ], _
+        [ "!h", $hDAltH ], _
+        [ "!m", $hDAltM ], _
+        [ "{APPS}", $hDApps ], _
+        [ "+{F10}", $hDApps ] _
     ]
     GUISetAccelerators($aAccelTable, $hWnd)
 EndFunc

@@ -48,7 +48,7 @@ Func _Picker_HighlightRowDynamic(ByRef $aRowIcon, ByRef $aRowIdxCtrl, ByRef $aRo
     Local $bIsDir = False
     Local $bIsFile = False
     
-    If StringInStr($sFullPath, " [window]") > 0 Then
+    If StringInStr($sFullPath, " [window") > 0 Then
         $bIsWindow = True
     ElseIf StringInStr($sFullPath, " [dir]") > 0 Then
         $bIsDir = True
@@ -75,13 +75,16 @@ Func _Picker_HighlightRowDynamic(ByRef $aRowIcon, ByRef $aRowIdxCtrl, ByRef $aRo
         EndIf
     EndIf
 
-    Local $iLevel = _Picker_GetPathLevel($sFullPath)
-    Local $iBaseLevel = 1
-    If $bExploreMode Then $iBaseLevel = _Picker_GetPathLevel($sExploreDir)
-    Local $iRelativeLevel = $iLevel - $iBaseLevel
-    If $iRelativeLevel < 0 Then $iRelativeLevel = 0
-    Local $iIndent = $iRelativeLevel * 12
-    If $iIndent > 150 Then $iIndent = 150
+    Local $iIndent = 0
+    If Not $bIsWindow Then
+        Local $iLevel = _Picker_GetPathLevel($sFullPath)
+        Local $iBaseLevel = 1
+        If $bExploreMode Then $iBaseLevel = _Picker_GetPathLevel($sExploreDir)
+        Local $iRelativeLevel = $iLevel - $iBaseLevel
+        If $iRelativeLevel < 0 Then $iRelativeLevel = 0
+        $iIndent = $iRelativeLevel * 12
+        If $iIndent > 150 Then $iIndent = 150
+    EndIf
 
     Local $iRowX = 15, $iRowHeight = 42
     Local $iTopPos = $iInputAreaHeight + 8 + ($iVisualIndex * $iRowHeight)

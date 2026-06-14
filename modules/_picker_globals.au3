@@ -73,5 +73,13 @@ Global $g_hDBackspace = 0
 Global $g_hDCtrlBS = 0
 Global $g_hDCopy = 0
 Global $g_hDCtrlInsert = 0
+Global $g_hDAltH = 0
+Global $g_hDAltM = 0
+Global $g_hDApps = 0
+Global $g_hToolbarBg = 0
+Global $g_hToolbarText = 0
+Global $g_bShowHidden = False
+Global $g_bShowMinimized = False
+Global $g_bIsCombinedPicker = False
 
 ; End of file: _picker_globals.au3

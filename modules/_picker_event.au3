@@ -16,7 +16,7 @@
 #ignorefunc _Picker_HandleKeyPress
 
 Func _Picker_HandleQueryChange(ByRef $aAllMatches)
-    Local $iRowHeight = 42, $iInputAreaHeight = 104, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
+    Local $iRowHeight = 42, $iInputAreaHeight = 124, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
     Local $sCurrentQuery = GUICtrlRead($g_hInputField)
     $g_sLastQuery = $sCurrentQuery
     
@@ -105,7 +105,7 @@ EndFunc
 
 ; End of file: _picker_event.au3 (Part 1)
 Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
-    Local $iRowHeight = 42, $iInputAreaHeight = 104, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
+    Local $iRowHeight = 42, $iInputAreaHeight = 124, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
     
     Select
         Case $iMsg == $g_hDEnter
@@ -216,6 +216,31 @@ Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
                 GUICtrlSetData($g_hStatusText, $sOriginalStatus)
             EndIf
 
+        Case $iMsg == $g_hDAltH
+            $g_bShowHidden = Not $g_bShowHidden
+            _Picker_UpdateToolbarText()
+            If $g_bIsCombinedPicker Then
+                _Picker_RebuildCombinedMatches($aAllMatches)
+                _Picker_HandleQueryChange($aAllMatches)
+            EndIf
+
+        Case $iMsg == $g_hDAltM
+            $g_bShowMinimized = Not $g_bShowMinimized
+            _Picker_UpdateToolbarText()
+            If $g_bIsCombinedPicker Then
+                _Picker_RebuildCombinedMatches($aAllMatches)
+                _Picker_HandleQueryChange($aAllMatches)
+            EndIf
+
+        Case $iMsg == $g_hDApps
+            If $g_iDisplayCount > 0 And ($g_iScrollOffset + $g_iSelectedIndex) < UBound($g_aFilteredPaths) Then
+                Local $sSelectedPathVal = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
+                If StringInStr($sSelectedPathVal, " [window") > 0 Then
+                    Local $sCleanWinText = StringRegExpReplace($sSelectedPathVal, "(?i)\s+\[window(?::[^\]]+)?\]\s*$", "")
+                    _Picker_Show_WinContextMenu($g_hPickerGUI, $sCleanWinText)
+                EndIf
+            EndIf
+
         Case Else
             _Picker_HandleKeyPress($iMsg, $aAllMatches)
             For $i = 1 To $g_iDisplayCount
@@ -227,6 +252,24 @@ Func _Picker_ProcessMsg($iMsg, ByRef $aAllMatches)
     EndSelect
     
     Return False
+EndFunc
+
+; ==============================================================================
+; Public API: Handles the WM_CONTEXTMENU Win32 message for the picker window
+; ==============================================================================
+Func _Picker_WM_CONTEXTMENU($hWnd, $iMsg, $wParam, $lParam)
+    #forceref $iMsg, $wParam, $lParam
+    If $hWnd <> $g_hPickerGUI Then Return "GUI_RUNDEFMSG"
+    
+    If $g_iDisplayCount > 0 And ($g_iScrollOffset + $g_iSelectedIndex) < UBound($g_aFilteredPaths) Then
+        Local $sSelectedPathVal = $g_aFilteredPaths[$g_iScrollOffset + $g_iSelectedIndex]
+        If StringInStr($sSelectedPathVal, " [window") > 0 Then
+            Local $sCleanWinText = StringRegExpReplace($sSelectedPathVal, "(?i)\s+\[window(?::[^\]]+)?\]\s*$", "")
+            _Picker_Show_WinContextMenu($g_hPickerGUI, $sCleanWinText)
+            Return 0
+        EndIf
+    EndIf
+    Return "GUI_RUNDEFMSG"
 EndFunc
 
 ; End of file: _picker_event.au3

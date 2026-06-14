@@ -11,7 +11,7 @@
 #include "_picker_style.au3"
 
 Func _Picker_HandleKeyPress($iMsg, ByRef $aAllMatches)
-    Local $iRowHeight = 42, $iInputAreaHeight = 104, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
+    Local $iRowHeight = 42, $iInputAreaHeight = 124, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
     Local $sCurrentQuery = GUICtrlRead($g_hInputField)
     
     Select

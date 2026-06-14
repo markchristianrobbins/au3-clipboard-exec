@@ -26,9 +26,10 @@
 #include "_picker_keys.au3"
 
 Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuery = "")
-    Local $iRowHeight = 42, $iInputAreaHeight = 104, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
+    Local $iRowHeight = 42, $iInputAreaHeight = 124, $iMenuWidth = 700, $iRowWidth = 670, $iRowX = 15, $iMaxDisplayRows = 36
     Local $iMaxFitRows = Int((@DesktopHeight - $iInputAreaHeight - 80) / $iRowHeight)
     If $iMaxDisplayRows > $iMaxFitRows Then $iMaxDisplayRows = $iMaxFitRows
+    If $iMaxDisplayRows < 5 Then $iMaxDisplayRows = $iMaxFitRows
     If $iMaxDisplayRows < 5 Then $iMaxDisplayRows = 5
     
     If Not IsDeclared("oChildCount") Or Not IsDeclared("oGrandchildCount") Then 
@@ -43,6 +44,9 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     
     Local $hTitleBg, $hTitleText
     _Picker_GUICreateTitleAndStatus($iMenuWidth, $sTitle, $hTitleBg, $hTitleText, $g_hStatusBg, $g_hStatusText)
+    
+    _Picker_GUICreateToolbar($iMenuWidth, $g_hToolbarBg, $g_hToolbarText, $g_hDAltH, $g_hDAltM, $g_hDApps)
+    _Picker_UpdateToolbarText()
     
     Local $hInputBg, $hDivider
     _Picker_GUICreateInputField($iMenuWidth, $sSearchQuery, $hInputBg, $g_hInputField, $hDivider)
@@ -70,7 +74,9 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     GUICtrlSetState($g_hNoResults, $GUI_HIDE)
     GUICtrlSetResizing($g_hNoResults, $GUI_DOCKALL)
     
-    _Picker_GUISetUpAccelerators($g_hPickerGUI, $g_hDUp, $g_hDDown, $g_hDPgUp, $g_hDPgDn, $g_hDHome, $g_hDEnd, $g_hDEnter, $g_hDCtrlEnter, $g_hDEscape, $g_hDCopy, $g_hDBackspace, $g_hDCtrlBS, $g_hDCtrlInsert)
+    _Picker_GUISetUpAccelerators($g_hPickerGUI, $g_hDUp, $g_hDDown, $g_hDPgUp, $g_hDPgDn, $g_hDHome, $g_hDEnd, $g_hDEnter, $g_hDCtrlEnter, $g_hDEscape, $g_hDCopy, $g_hDBackspace, $g_hDCtrlBS, $g_hDCtrlInsert, $g_hDAltH, $g_hDAltM, $g_hDApps)
+    
+    GUIRegisterMsg(0x007B, "_Picker_WM_CONTEXTMENU")
     
     GUISetState(@SW_SHOW, $g_hPickerGUI)
     WinActivate($g_hPickerGUI)
@@ -120,6 +126,25 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
                 Local $iMouseX = $aCursorInfo[0]
                 Local $iMouseY = $aCursorInfo[1]
                 Local $bRightClicked = ($aCursorInfo[3] == 1)
+                Local $bLeftClicked = ($aCursorInfo[2] == 1)
+                
+                If $iHoveredCtrlID == $g_hToolbarText And $bLeftClicked Then
+                    If $iMouseX < 350 Then
+                        $g_bShowHidden = Not $g_bShowHidden
+                    Else
+                        $g_bShowMinimized = Not $g_bShowMinimized
+                    EndIf
+                    
+                    _Picker_UpdateToolbarText()
+                    If $g_bIsCombinedPicker Then
+                        _Picker_RebuildCombinedMatches($aAllMatches)
+                        _Picker_HandleQueryChange($aAllMatches)
+                    EndIf
+                    
+                    While GUIGetCursorInfo($g_hPickerGUI)[2] == 1
+                        Sleep(10)
+                    WEnd
+                EndIf
                 
                 If $iMouseX <> $g_iLastMouseX Or $iMouseY <> $g_iLastMouseY Or $bRightClicked Then
                     If $iMouseX <> $g_iLastMouseX Or $iMouseY <> $g_iLastMouseY Then
@@ -174,6 +199,7 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
     If IsDeclared("oChildCount") Then $oChildCount.RemoveAll()
     If IsDeclared("oGrandchildCount") Then $oGrandchildCount.RemoveAll()
     
+    GUIRegisterMsg(0x007B, "")
     GUIDelete($g_hPickerGUI)
     Return $g_sSelectedPath
 EndFunc

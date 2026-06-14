@@ -21,6 +21,11 @@ Func _Picker_FilterPathsByFuzzyScore($aMatchesList, $sSearchTxt)
     For $i = 0 To $iMasterSize - 1
         Local $sFullPath = $aMatchesList[$i]
         Local $sCleanPath = $sFullPath
+        
+        ; Remove window/dir tags and match counts from search-matching string
+        $sCleanPath = StringRegExpReplace($sCleanPath, "(?i)\s+\[(?:dir|file|window)(?::[^\]]+)?\]\s*$", "")
+        $sCleanPath = StringRegExpReplace($sCleanPath, "(?i)\s+\(\d+\s+matches\)\s*$", "")
+        
         If StringRight($sCleanPath, 1) == "\" And StringLen($sCleanPath) > 3 Then
             $sCleanPath = StringTrimRight($sCleanPath, 1)
         EndIf
@@ -29,7 +34,7 @@ Func _Picker_FilterPathsByFuzzyScore($aMatchesList, $sSearchTxt)
         Local $sBaseName = $sCleanPath
         If $iLastSl > 0 Then $sBaseName = StringMid($sCleanPath, $iLastSl + 1)
         
-        If StringInStr(StringLower($sBaseName), StringLower($sSearchTxt), 0) Then
+        If StringInStr(StringLower($sBaseName), StringLower($sSearchTxt), 0) Or StringInStr(StringLower($sCleanPath), StringLower($sSearchTxt), 0) Then
             $aResults[$iCount] = $sFullPath
             $iCount += 1
         EndIf

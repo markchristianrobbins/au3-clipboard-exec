@@ -15,15 +15,43 @@
 
 ## Commit Message
 ```text
-feat: overlapped window filtering; show minimized/hidden state suffix; bind Ctrl+Insert copy info; add secondary right-click context menu
+feat: add layout-aligned toolbar above status bar with Alt+H/Alt+M active filters, bypass indents for windows, bind Apps key to context menu
 
-- Limited list window harvest to overlapped window style by checking WS_CHILD and WS_POPUP bitmasks using direct user32 DLL longs.
-- Dynamic suffixing for minimized and invisible window properties [window: minimized], [window: hidden], [window: minimized & hidden].
-- Re-routed standard copy hotkeys to custom ^{INSERT} accelerator to copy deeply formatted system window diagnostic metrics.
-- Tracked secondary mouse releases in the interactive picker loop to trigger native TrackPopupMenu offering copy, minimize, maximize, restore, and close actions.
+- Created a layout-aligned status toolbar to display and toggle filter states for hidden and minimized windows.
+- Solved layout shift by adjusting general list math parameters to accommodate a 124px input area size safely.
+- Connected the "Apps" key accelerator in tandem with WM_CONTEXTMENU Win32 callbacks to trigger native context popups.
+- Cleared window component row styling indent offsets so that windows remain vertically aligned.
+- Fixed directory visibility on combined picker queries by setting the combined state tracking flags cleanly on execution triggers.
 ```
 
 ## Log Entries
+
+## [2026-06-14T20:12:00Z]
+### 🎯 Primary Goals & Requirements
+- Inject a polished, high-contrast visual toolbar directly above the status bar displaying Show Hidden and Show Minimized filters.
+- Connect Alt+H and Alt+M keyboard shortcuts, alongside mouse-clicks on toolbar regions, to toggle active window filter parameters dynamically.
+- Clear directory listings and ensure directories and windows are merged, searched, and updated cleanly when combined hotkeys (`Win+Ctrl+Alt+Enter`) are used.
+- Bypass row indentation levels for window items so that they remain perfectly left-aligned.
+- Hook the standard "Apps" key to invoke native win32 context menus for list rows.
+
+### 🛠️ Completed Changes in this Session
+- **Status Filter Toolbar Layout**: Crafted `_Picker_GUICreateToolbar(...)` within `/modules/_picker_gui.au3` and synced input offsets globally from `104` to `124` across keys, renderers, events, and dialog models.
+- **Wired Hotkey & Click Toggles**: Registered `{ALT+H}` and `{ALT+M}` accelerators in `/modules/_picker_gui.au3` and matched their case statements to trigger dynamic query filter rebuilds and text updates. Added mouse cursor click position testing to toggle the toolbar interactively.
+- **Direct Combined Picker Sync**: Wired `$g_bIsCombinedPicker` state checks to invoke the unified `_Picker_RebuildCombinedMatches($aCombinedList)` function on toolbar state updates, restoring full directories visibility on combined query triggers.
+- **Window Row Indent Bypass**: Updated row layout render styles in `/modules/_picker_render.au3` to suppress incremental deep-nesting margins if the hovered element contains a standard window tag suffix.
+- **Wired Context Menu Keyboard Hooks**: Configured `{APPS}` key accelerator strings to bind `_Picker_WM_CONTEXTMENU` messages via direct `GUIRegisterMsg` calls, invoking robust cell-targeted menus on request.
+
+### 🔸 Affected Files
+- `/modules/_picker_gui.au3`
+- `/modules/_picker_helpers.au3`
+- `/modules/_picker_render.au3`
+- `/modules/_picker_event.au3`
+- `/modules/_picker_keys.au3`
+- `/modules/_picker.au3`
+- `/modules/_hotkeys.au3`
+- `/modules/_picker_globals.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
 
 ## [2026-06-14T12:35:00Z]
 ### 🎯 Primary Goals & Requirements

@@ -37,6 +37,15 @@
 - [x] Add right-click context menu options to manage window states
     - Intercept Mouse secondary right-clicks on window rows inside the interactive loop.
     - Construct standard native TrackPopupMenu menus listing: Copy Info, Minimize, Maximize, Restore, Close.
+- [x] Correct indentation for window elements
+    - Bypassed indent offsets inside list rows if the entry is of type window.
+- [x] Connect the "Apps" key to invoke item context menus
+    - Assigned {APPS} keyboard accelerator mapping and VM_CONTEXTMENU message hooks to trigger context menus at the mouse coordinate smoothly.
+- [x] Support inclusive directory listings on Windows & Directories Combined Intelligent Picker
+    - Correctly wired global combined picker active state flags, enabling clean merge, search, and dynamic filter rebuilds for directory entries.
+- [x] Add dynamic state toggling toolbar above status bar
+    - Rendered high-contrast toolbar below input fields, adjusting general application layout to accommodate additional height (124px area size) safely.
+    - Clickable text regions and Alt+H / Alt+M hotkeys toggle Show Hidden and Show Minimized state filters securely.
 
 ## [x] Implement New Specifications (Line Decomposition & Prefixes)
 - [x] Implement Line Decomposition logic on Win+Alt+Enter input:

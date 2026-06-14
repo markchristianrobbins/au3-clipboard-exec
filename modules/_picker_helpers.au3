@@ -214,4 +214,99 @@ Func _Picker_Show_WinContextMenu($hWndGUI, $sWinTitle)
     EndSelect
 EndFunc
 
+; ==============================================================================
+; Public API: Dynamically updates the text display on the toolbar element
+; ==============================================================================
+Func _Picker_UpdateToolbarText()
+    Local $sHiddenState = "OFF"
+    If $g_bShowHidden Then $sHiddenState = "ON"
+    Local $sMinState = "OFF"
+    If $g_bShowMinimized Then $sMinState = "ON"
+    Local $sText = "  Toolbar:  Show Hidden [ " & $sHiddenState & " ] (Alt+H)    |    Show Minimized [ " & $sMinState & " ] (Alt+M)"
+    GUICtrlSetData($g_hToolbarText, $sText)
+EndFunc
+
+; ==============================================================================
+; Public API: Re-queries windows and index directories based on active toggles
+; ==============================================================================
+Func _Picker_RebuildCombinedMatches(ByRef $aAllMatches)
+    ; 1. Load directory paths from index
+    _Index_Initialize()
+    Local $aDirs = _Index_LoadIndexedPaths()
+    If UBound($aDirs) == 0 Or (UBound($aDirs) == 1 And $aDirs[0] == "") Then
+        Local $aFallback[4] = ["C:\", "D:\", @MyDocumentsDir, @UserProfileDir]
+        $aDirs = $aFallback
+    Endif
+    
+    ; 2. Extract active windows reflecting toolbar toggles
+    Local $aWinList = WinList()
+    Local $aWindows[UBound($aWinList)]
+    Local $iWinCount = 0
+    Local $oSeenWins = ObjCreate("Scripting.Dictionary")
+    $oSeenWins.CompareMode = 1
+    
+    For $i = 1 To $aWinList[0][0]
+        Local $sTitle = $aWinList[$i][0]
+        Local $hWnd = $aWinList[$i][1]
+        
+        If $sTitle <> "" And $sTitle <> "Program Manager" And $hWnd <> $g_hPickerGUI And _Util_IsOverlappedWindow($hWnd) Then
+            Local $iState = WinGetState($hWnd)
+            Local $bIsVisible = (BitAND($iState, 2) > 0)
+            Local $bIsMinimized = (BitAND($iState, 16) > 0)
+            
+            ; Active toggles boundaries
+            If Not $g_bShowHidden And Not $bIsVisible Then ContinueLoop
+            If Not $g_bShowMinimized And $bIsMinimized Then ContinueLoop
+            
+            Local $sSuffix = " [window]"
+            If Not $bIsVisible And $bIsMinimized Then
+                $sSuffix = " [window: minimized & hidden]"
+            ElseIf Not $bIsVisible Then
+                $sSuffix = " [window: hidden]"
+            ElseIf $bIsMinimized Then
+                $sSuffix = " [window: minimized]"
+            EndIf
+            
+            Local $sItemTitle = $sTitle & $sSuffix
+            If Not $oSeenWins.Exists(StringLower($sItemTitle)) Then
+                $oSeenWins.Add(StringLower($sItemTitle), 1)
+                $aWindows[$iWinCount] = $sItemTitle
+                $iWinCount += 1
+            EndIf
+        EndIf
+    Next
+    If $iWinCount > 0 Then ReDim $aWindows[$iWinCount]
+    
+    Local $iDirsCount = UBound($aDirs)
+    Local $aFormattedDirs[$iDirsCount]
+    Local $iDirCount = 0
+    For $i = 0 To $iDirsCount - 1
+        If $aDirs[$i] <> "" Then
+            $aFormattedDirs[$iDirCount] = $aDirs[$i] & " [dir]"
+            $iDirCount += 1
+        EndIf
+    Next
+    If $iDirCount > 0 Then ReDim $aFormattedDirs[$iDirCount]
+    
+    Local $iTotalSize = $iWinCount + $iDirCount
+    If $iTotalSize == 0 Then
+        Local $aEmpty[1] = [""]
+        $aAllMatches = $aEmpty
+        Return
+    EndIf
+    
+    Local $aCombined[ $iTotalSize ]
+    Local $iIdx = 0
+    For $i = 0 To $iWinCount - 1
+        $aCombined[$iIdx] = $aWindows[$i]
+        $iIdx += 1
+    Next
+    For $i = 0 To $iDirCount - 1
+        $aCombined[$iIdx] = $aFormattedDirs[$i]
+        $iIdx += 1
+    Next
+    
+    $aAllMatches = $aCombined
+EndFunc
+
 ; End of file: _picker_helpers.au3

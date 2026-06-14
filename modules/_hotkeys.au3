@@ -402,4 +402,92 @@ Func _Hotkey_ClipOp()
     EndIf
 EndFunc
 
+; ==============================================================================
+; Hotkey: Win+Ctrl+Alt+Enter (Windows & Directories Combined Intelligent Picker)
+; ==============================================================================
+Func _Hotkey_WinCtrlAltEnter()
+    _Util_PlaySystemSound(0x00000000)
+    
+    ; 1. Load directory paths from index
+    _Index_Initialize()
+    Local $aDirs = _Index_LoadIndexedPaths()
+    If UBound($aDirs) == 0 Or (UBound($aDirs) == 1 And $aDirs[0] == "") Then
+        ; Fallback to sample base paths if index database is unpopulated or missing
+        Local $aFallback[4] = ["C:\", "D:\", @MyDocumentsDir, @UserProfileDir]
+        $aDirs = $aFallback
+    EndIf
+    
+    ; 2. Extract active and visible windows
+    Local $aWinList = WinList()
+    Local $aWindows[UBound($aWinList)]
+    Local $iWinCount = 0
+    Local $oSeenWins = ObjCreate("Scripting.Dictionary")
+    $oSeenWins.CompareMode = 1
+    
+    For $i = 1 To $aWinList[0][0]
+        Local $sTitle = $aWinList[$i][0]
+        Local $hWnd = $aWinList[$i][1]
+        
+        ; Verify if window is visible, has titles, and is not a system background thread task
+        If $sTitle <> "" And BitAND(WinGetState($hWnd), 2) And $sTitle <> "Program Manager" And $hWnd <> $g_hPickerGUI Then
+            If Not $oSeenWins.Exists(StringLower($sTitle)) Then
+                $oSeenWins.Add(StringLower($sTitle), 1)
+                $aWindows[$iWinCount] = $sTitle & " [window]"
+                $iWinCount += 1
+            EndIf
+        EndIf
+    Next
+    If $iWinCount > 0 Then ReDim $aWindows[$iWinCount]
+    
+    Local $iDirsCount = UBound($aDirs)
+    Local $aFormattedDirs[$iDirsCount]
+    Local $iDirCount = 0
+    For $i = 0 To $iDirsCount - 1
+        If $aDirs[$i] <> "" Then
+            $aFormattedDirs[$iDirCount] = $aDirs[$i] & " [dir]"
+            $iDirCount += 1
+        EndIf
+    Next
+    If $iDirCount > 0 Then ReDim $aFormattedDirs[$iDirCount]
+    
+    ; 3. Combine both collections into a single picker list
+    Local $iTotalSize = $iWinCount + $iDirCount
+    If $iTotalSize == 0 Then
+        _UI_ShowToast("Clipboard Exec", "No open windows or indexed directories discovered.")
+        Return
+    EndIf
+    
+    Local $aCombinedList[$iTotalSize]
+    Local $iCombIdx = 0
+    For $i = 0 To $iWinCount - 1
+        $aCombinedList[$iCombIdx] = $aWindows[$i]
+        $iCombIdx += 1
+    Next
+    For $i = 0 To $iDirCount - 1
+        $aCombinedList[$iCombIdx] = $aFormattedDirs[$i]
+        $iCombIdx += 1
+    Next
+    
+    ; 4. Present combined Search Picker GUI
+    Local $sResult = _Picker_ShowGUI($aCombinedList, "WINDOWS AND DIRECTORIES INTUITIVE PICKER", "")
+    If $sResult == "" Then Return
+    
+    ; 5. Route selection
+    If StringInStr($sResult, " [window]") > 0 Then
+        Local $sCleanWin = StringRegExpReplace($sResult, "(?i)\s+\[window\]\s*$", "")
+        Local $hWndTarget = WinGetHandle($sCleanWin)
+        If $hWndTarget Then
+            WinSetState($hWndTarget, "", @SW_RESTORE)
+            WinActivate($hWndTarget)
+            _UI_ShowToast("Activated Window", "Routed focus to window: " & $sCleanWin)
+        Else
+            _UI_ShowToast("Action Error", "Unable to target window: " & $sCleanWin)
+        EndIf
+    Else
+        ; Must be directory path. Clean suffix.
+        Local $sCleanDir = StringRegExpReplace($sResult, "(?i)\s+\[dir\]\s*$", "")
+        _Handler_OpenInDOpus($sCleanDir, "DIRECTORY_FULL")
+    EndIf
+EndFunc
+
 ; End of file: _hotkeys.au3

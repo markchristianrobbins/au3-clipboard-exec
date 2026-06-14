@@ -20,19 +20,9 @@ Func _Picker_HandleQueryChange(ByRef $aAllMatches)
     Local $sCurrentQuery = GUICtrlRead($g_hInputField)
     $g_sLastQuery = $sCurrentQuery
     
-    Local $aRecentPaths = _Picker_LoadRecents()
+    ; Recents disabled per user request
     $g_iRecentCount = 0
-    
-    ; CRITICAL FIX: Explicitly sizing the array to 5 items *before* writing to it via subscript index
-    Local $aActualRecents[5]
-    For $i = 0 To UBound($aRecentPaths) - 1
-        If $aRecentPaths[$i] <> "" Then
-            $aActualRecents[$g_iRecentCount] = $aRecentPaths[$i]
-            $g_iRecentCount += 1
-            If $g_iRecentCount >= 5 Then ExitLoop
-        EndIf
-    Next
-    If $g_iRecentCount > 0 Then ReDim $aActualRecents[$g_iRecentCount]
+    Local $aActualRecents[1] = [""]
     
     Local $aSearchMatches = _Picker_FilterPathsByFuzzyScore($g_aActiveBasePaths, $sCurrentQuery)
     If $sCurrentQuery <> "" And UBound($aSearchMatches) <= 3000 Then _Picker_SortPathsByLevelAndAlphabet($aSearchMatches)

@@ -58,6 +58,13 @@
 - [x] Enhance Status Bar Detail:
     - Show precise process names and window classes for active windows, and sizes for direct files, inside the active status details bar.
 
+## [x] Implement Search Picker for Windows and Directories
+- [x] Remove Recents Feature:
+    - Disabled storing of new paths to recents, and bypassed loading/merging of recent paths inside the interactive query handler completely.
+- [x] Bind Win+Ctrl+Alt+Enter Combo:
+    - Registered `#^!{ENTER}` within the main service loop.
+    - Combined current desktop visible windows (`WinList`) and crawled system paths from indexes (`_Index_LoadIndexedPaths`) into a unified launcher, mapping appropriate action routes on selection.
+
 ## [ ] New Changes
 - [ ] Migrate central app configurations inside `.ini` layouts to JSON
     - Define robust schemas for mapping application names to window behaviors.

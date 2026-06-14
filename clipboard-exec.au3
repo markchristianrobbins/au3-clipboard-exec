@@ -31,6 +31,7 @@ Local $idExit = TrayCreateItem("Exit")
 _Engine_RegisterHotkey("#^+{ENTER}", "_Hotkey_Exit")       ; Win+Ctrl+Shift+Enter
 _Engine_RegisterHotkey("#!{ENTER}", "_Hotkey_ContextOp")   ; Win+Alt+Enter
 _Engine_RegisterHotkey("#!+{ENTER}", "_Hotkey_ClipOp")     ; Win+Alt+Shift+Enter
+_Engine_RegisterHotkey("#^!{ENTER}", "_Hotkey_WinCtrlAltEnter") ; Win+Ctrl+Alt+Enter
 
 _UI_ShowToast("Clipboard Exec", "Engine initialized and listening for hotkeys.")
 

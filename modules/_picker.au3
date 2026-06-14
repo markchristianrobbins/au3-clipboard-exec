@@ -147,7 +147,7 @@ Func _Picker_ShowGUI(ByRef $aAllMatches, $sTitle = "SEARCH PICKER", $sSearchQuer
         Sleep(10)
     WEnd
     
-    If $g_sSelectedPath <> "" Then _Picker_AddRecent($g_sSelectedPath)
+    ; If $g_sSelectedPath <> "" Then _Picker_AddRecent($g_sSelectedPath)
     
     If IsDeclared("oChildCount") Then $oChildCount.RemoveAll()
     If IsDeclared("oGrandchildCount") Then $oGrandchildCount.RemoveAll()

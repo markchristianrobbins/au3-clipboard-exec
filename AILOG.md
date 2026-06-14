@@ -15,14 +15,32 @@
 
 ## Commit Message
 ```text
-feat: implement advanced token type classification, window icons, and status details inside picker
+feat: suppress recents; bind Win+Ctrl+Alt+Enter to unified windows & directories picker
 
-- Dynamically classify decomposed line tokens as '[dir]', '[file]', or '[window]'.
-- Added on-the-fly extraction of program icons with PID mapping using '_WinAPI_GetProcessFileName'.
-- Embedded window processes, UI class descriptions, and exact file sizes directly into active status bar panel.
+- Bypassed recents loading/recording internally to satisfy disabling requests.
+- Integrated '#^!{ENTER}' hotkey triggering combined WinList and crawled index paths.
+- Suffix-tagged items enabling dynamic visual icon extraction and targeted execution routing.
 ```
 
 ## Log Entries
+
+## [2026-06-14T12:20:00Z]
+### 🎯 Primary Goals & Requirements
+- Disable and hide the "recent folders" history display throughout the custom search picker interface.
+- Implement a dedicated shortcut combination (`Win+Ctrl+Alt+Enter`) that triggers an intuitive, unified picker presenting active desktop window titles paired with crawled directory paths.
+
+### 🛠️ Completed Changes in this Session
+- **Suppressed Recent Entries completely**: Bypassed loading and integration of recent elements inside `_Picker_HandleQueryChange()` in `/modules/_picker_event.au3`, and disabled recording selections inside `/modules/_picker.au3`.
+- **Linked Win+Ctrl+Alt+Enter hotkey**: Assigned the `#^!{ENTER}` hotkey to `_Hotkey_WinCtrlAltEnter` within `/clipboard-exec.au3`.
+- **Built Unified Windows & Directories List**: Collected active visible desktop windows (`WinList`) and crawled path vectors (`_Index_LoadIndexedPaths`), formatted them with high-fidelity suffixes (` [window]`, ` [dir]`), displayed them in a clean searchable GUI, and handled appropriate system actions on select.
+
+### 🔸 Affected Files
+- `/clipboard-exec.au3`
+- `/modules/_picker.au3`
+- `/modules/_picker_event.au3`
+- `/modules/_hotkeys.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
 
 ## [2026-06-14T12:15:00Z]
 ### 🎯 Primary Goals & Requirements

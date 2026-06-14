@@ -15,6 +15,18 @@
 - ▪️[TESTING.md](TESTING.md)
 
 ## [x] Incoming tasks from chat
+- [x] Fix EndWhile syntax bug in background index crawler script loops
+    - Replaced the erroneous 'EndWhile' statement with native AutoIt 'WEnd' loop terminator on line 423 of '_index.au3'.
+- [x] Prioritize script-directory settings and profile files over central `C:\$data` fallbacks
+    - Created unified helper function `_Config_GetIniPath()` and `_Config_GetAppsIniPath()` in `_config.au3` prioritizing `@ScriptDir & "\clipboard-exec.ini"` and `@ScriptDir & "\apps.ini"` over `C:\$data` paths.
+    - Updated `_Config_GetActiveAppProfile()`, `_Picker_IsWindowExcluded()`, `_Picker_ShowMiniGUI()`, `_Index_ProcessQueueBatch()`, and `_Index_ForceReload()` to utilize the unified INI resolver function, preventing configuration path mismatch and redundant loops.
+- [x] Consolidate window exclusion criteria under a single unified pipe-separated INI entry
+    - Designed pipe-separated combined exclusions (`Title: ...|Class: ...|Process: ...=1`) matching the requested format.
+    - Updated `_Picker_IsWindowExcluded` to read and parse the unified conditions dynamically using `IniReadSection` and short-circuit condition evaluation.
+    - Updated picker mini's "Exclude Window" action to build the pipe-separated criteria key and store it with singular `IniWrite` call.
+- [x] Implement robust real-time file-system diagnostic logging for indexing crawls
+    - Created timestamped diagnostic logger appending detailed error metrics, directory states, and API return values to `clipboard-exec-diagnostics.txt` directly next to `clipboard-exec.au3`.
+    - Integrated automatic path normalization using `_PathFull` for database and log registers.
 - [x] Reverse engineer full AutoIt application codebase
     - Unraveled `clipboard-exec.au3` hotkey binding routes and main loops.
     - Reverse engineered directory matching criteria, regular expressions, and handlers.

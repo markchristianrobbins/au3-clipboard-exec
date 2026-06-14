@@ -13,6 +13,7 @@
 #include <Array.au3>
 #include "_picker_style.au3"
 #include "_ui.au3"
+#include "_config.au3"
 
 Func _Picker_ShowMiniGUI($hWndParent, $sWinTitle)
     Local $hWndTarget = WinGetHandle($sWinTitle)
@@ -21,10 +22,7 @@ Func _Picker_ShowMiniGUI($hWndParent, $sWinTitle)
         Return ""
     EndIf
 
-    Local $sConfigIni = "C:\$data\clipboard-exec.ini"
-    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\..\clipboard-exec.ini"
-    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\clipboard-exec.ini"
-    If Not FileExists($sConfigIni) Then $sConfigIni = "clipboard-exec.ini"
+    Local $sConfigIni = _Config_GetIniPath()
 
     Local $aOptions[7] = ["Activate", "Copy Info", "Minimize", "Maximize", "Restore", "Close", "Exclude Window"]
     Local $aOptionIcons[7] = [4, 134, 24, 21, 22, 112, 109] ; shell32.dll icons matching actions
@@ -343,29 +341,23 @@ Func _Picker_ExecuteMiniAction($sActionName, $sWinTitle, $hWndTarget)
             _UI_ShowToast("Window closed", "Sent close instruction to window: " & $sWinTitle)
 
         Case $sActionName == "Exclude Window"
-            Local $sConfigIni = "C:\$data\clipboard-exec.ini"
-            If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\..\clipboard-exec.ini"
-            If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\clipboard-exec.ini"
-            If Not FileExists($sConfigIni) Then $sConfigIni = "clipboard-exec.ini"
+            Local $sConfigIni = _Config_GetIniPath()
             
-            ; Exclude by exact Title
-            IniWrite($sConfigIni, "excluded-windows", "Title: " & $sWinTitle, "1")
-            
-            ; Exclude by Class if possible
+            Local $sKey = "Title: " & $sWinTitle
             Local $sClass = _WinAPI_GetClassName($hWndTarget)
             If $sClass <> "" Then
-                IniWrite($sConfigIni, "excluded-windows", "Class: " & $sClass, "1")
-            Endif
-            
-            ; Exclude by Process Executable Name if possible
+                $sKey &= "|Class: " & $sClass
+            EndIf
             Local $iPID = WinGetProcess($hWndTarget)
             If $iPID > 0 Then
                 Local $sExePath = _WinAPI_GetProcessFileName($iPID)
                 Local $sExeName = _Picker_GetBaseName($sExePath)
                 If $sExeName <> "" Then
-                    IniWrite($sConfigIni, "excluded-windows", "Process: " & $sExeName, "1")
+                    $sKey &= "|Process: " & $sExeName
                 EndIf
             EndIf
+            
+            IniWrite($sConfigIni, "excluded-windows", $sKey, "1")
             
             _UI_ShowToast("Window Excluded", "Excluded window forever! Saved criteria details in INI.")
     EndSelect

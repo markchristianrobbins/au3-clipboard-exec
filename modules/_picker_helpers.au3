@@ -12,6 +12,7 @@
 ; ==============================================================================
 #include "_picker_globals.au3"
 #include "_ui.au3"
+#include "_config.au3"
 
 
 Func _Picker_GetBaseName($sFullPath)
@@ -164,24 +165,59 @@ EndFunc
 ; Public API: Checks if a window is persistently excluded from harvested results
 ; ==============================================================================
 Func _Picker_IsWindowExcluded($sTitle, $hWnd)
-    Local $sConfigIni = "C:\$data\clipboard-exec.ini"
-    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\..\clipboard-exec.ini"
-    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\clipboard-exec.ini"
-    If Not FileExists($sConfigIni) Then $sConfigIni = "clipboard-exec.ini"
+    Local $sConfigIni = _Config_GetIniPath()
     
-    If IniRead($sConfigIni, "excluded-windows", "Title: " & $sTitle, "0") == "1" Then Return True
+    Local $aExclusions = IniReadSection($sConfigIni, "excluded-windows")
+    If @error Or Not IsArray($aExclusions) Then Return False
     
+    Local $sClass = ""
+    Local $sExeName = ""
     If $hWnd Then
-        Local $sClass = _WinAPI_GetClassName($hWnd)
-        If $sClass <> "" And IniRead($sConfigIni, "excluded-windows", "Class: " & $sClass, "0") == "1" Then Return True
-        
+        $sClass = _WinAPI_GetClassName($hWnd)
         Local $iPID = WinGetProcess($hWnd)
         If $iPID > 0 Then
             Local $sExePath = _WinAPI_GetProcessFileName($iPID)
-            Local $sExeName = _Picker_GetBaseName($sExePath)
-            If $sExeName <> "" And IniRead($sConfigIni, "excluded-windows", "Process: " & $sExeName, "0") == "1" Then Return True
+            $sExeName = _Picker_GetBaseName($sExePath)
         EndIf
     EndIf
+    
+    For $i = 1 To $aExclusions[0][0]
+        Local $sKey = $aExclusions[$i][0]
+        Local $sValue = $aExclusions[$i][1]
+        If $sValue <> "1" Then ContinueLoop
+        
+        Local $aParts = StringSplit($sKey, "|")
+        Local $bAllMatch = True
+        Local $iConditionsCount = 0
+        
+        For $j = 1 To $aParts[0]
+            Local $sPart = StringStripWS($aParts[$j], 3)
+            If StringLeft(StringLower($sPart), 6) == "title:" Then
+                Local $sVal = StringStripWS(StringMid($sPart, 7), 3)
+                $iConditionsCount += 1
+                If StringLower($sTitle) <> StringLower($sVal) Then
+                    $bAllMatch = False
+                    ExitLoop
+                EndIf
+            ElseIf StringLeft(StringLower($sPart), 6) == "class:" Then
+                Local $sVal = StringStripWS(StringMid($sPart, 7), 3)
+                $iConditionsCount += 1
+                If StringLower($sClass) <> StringLower($sVal) Then
+                    $bAllMatch = False
+                    ExitLoop
+                EndIf
+            ElseIf StringLeft(StringLower($sPart), 8) == "process:" Then
+                Local $sVal = StringStripWS(StringMid($sPart, 9), 3)
+                $iConditionsCount += 1
+                If StringLower($sExeName) <> StringLower($sVal) Then
+                    $bAllMatch = False
+                    ExitLoop
+                EndIf
+            EndIf
+        Next
+        
+        If $iConditionsCount > 0 And $bAllMatch Then Return True
+    Next
     
     Return False
 EndFunc

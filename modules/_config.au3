@@ -7,16 +7,33 @@
 Global Const $g_sMainIni = "C:\$data\clipboard-exec.ini"
 
 ; ==============================================================================
+; Public API: Locates key settings configuration in script dir or fallbacks (prioritizing script dir)
+; ==============================================================================
+Func _Config_GetIniPath()
+    Local $sConfigIni = @ScriptDir & "\clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\..\clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = "clipboard-exec.ini"
+    If Not FileExists($sConfigIni) Then $sConfigIni = "C:\$data\clipboard-exec.ini"
+    Return $sConfigIni
+EndFunc
+
+; ==============================================================================
+; Public API: Locates window profiles database in script dir or fallbacks (prioritizing script dir)
+; ==============================================================================
+Func _Config_GetAppsIniPath()
+    Local $sAppsIni = @ScriptDir & "\apps.ini"
+    If Not FileExists($sAppsIni) Then $sAppsIni = @ScriptDir & "\..\apps.ini"
+    If Not FileExists($sAppsIni) Then $sAppsIni = "apps.ini"
+    If Not FileExists($sAppsIni) Then $sAppsIni = "C:\$data\apps.ini"
+    Return $sAppsIni
+EndFunc
+
+; ==============================================================================
 ; Public API: Simple, crash-proof active window profiling engine
 ; ==============================================================================
 Func _Config_GetActiveAppProfile()
-    Local $sAppsIni = "C:\$data\apps.ini"
-    If Not FileExists($sAppsIni) Then $sAppsIni = @ScriptDir & "\apps.ini"
-    If Not FileExists($sAppsIni) Then $sAppsIni = "apps.ini" ; Fallback to current directory
-
-    Local $sConfigIni = "C:\$data\clipboard-exec.ini"
-    If Not FileExists($sConfigIni) Then $sConfigIni = @ScriptDir & "\clipboard-exec.ini"
-    If Not FileExists($sConfigIni) Then $sConfigIni = "clipboard-exec.ini"
+    Local $sAppsIni = _Config_GetAppsIniPath()
+    Local $sConfigIni = _Config_GetIniPath()
 
     Local $hWnd = WinGetHandle("[ACTIVE]")
     If @error Or $hWnd == 0 Then

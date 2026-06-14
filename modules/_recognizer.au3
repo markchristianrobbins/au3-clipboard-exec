@@ -1,68 +1,37 @@
 #include-once
-#include <AutoItConstants.au3>
-
 ; ==============================================================================
-; Public API: Evaluates clipboard string against priority regex filters
+; File: _recognizer.au3
+; Paths: C:\_\au3-clipboard-exec\modules\_recognizer.au3
+; Description: Evaluates raw clipboard strings against regular expression matrices.
+; Functions:
+;   - _Recognizer_Evaluate (Classifies text data strings into operational routing types)
 ; ==============================================================================
-Func _Recognizer_Evaluate($sClipText)
-    ; Clean up leading and trailing whitespace blocks
-    $sClipText = StringStripWS($sClipText, 3)
-    If $sClipText = "" Then Return "EMPTY"
 
-    ; 1. Match DOS Commands (e.g., "> dir")
-    If StringLeft($sClipText, 1) = ">" Then Return "DOS_CMD"
+Func _Recognizer_Evaluate($sTextData)
+    Local $sCleanText = StringLower(StringStripWS($sTextData, 3))
+    If $sCleanText == "" Then Return "DEFAULT"
 
-    ; 2. Match Custom aip:// Protocol Links (e.g., aip://prompt_payload)
-    If StringRegExp($sClipText, "(?i)^aip:[\\/]+") Then
-        Local $sCleanPayload = StringRegExpReplace($sClipText, "(?i)^aip:[\\/]+", "")
-        ClipPut($sCleanPayload)
-        Return "AIP_PROTOCOL"
+    ; 1. Check for web protocols and your custom programmatic asset syntax link keys
+    If StringRegExp($sCleanText, "^(https?:|aip:)") Then
+        Return "URL_LAUNCH"
     EndIf
 
-    ; 3. Match file:// protocol links (e.g., file:///C:/path/to/file.txt)
-    If StringRegExp($sClipText, "(?i)^file:[\\/]+") Then
-        Local $sCleanPath = StringRegExpReplace($sClipText, "(?i)^file:[\\/]+", "")
-        $sCleanPath = StringReplace($sCleanPath, "/", "\")
-        ClipPut($sCleanPath)
-        
-        If FileExists($sCleanPath) And StringInStr(FileGetAttrib($sCleanPath), "D") Then
-            Return "DIRECTORY_FULL"
-        EndIf
-        Return "FILE_FULL"
+    ; 2. Check for fully qualified local file system absolute pathways
+    If StringRegExp($sCleanText, "^[a-zA-Z]:\\") Or StringLeft($sCleanText, 2) == "\\" Then
+        Return "DIRECTORY_FULL"
     EndIf
 
-    ; 4. Match Web URLs (e.g., https://google.com or ://google.com)
-    Local $sUrlPattern = "(?i)^(https?|ftp)://|[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?([\\/].*)?$"
-    If StringRegExp($sClipText, $sUrlPattern) Then Return "URL"
-
-    ; 5. Match Zdots (e.g., "z.20260614...")
-    If StringRegExp($sClipText, "(?i)^(z[\.-])?\d{14,18}") Then Return "ZDOT"
-
-    ; 6. Match Registry Paths (e.g., HKEY_LOCAL_MACHINE\..., HKCU\...)
-    Local $sRegPattern = "(?i)^(Computer\\)?(HKEY_|HKCR|HKCU|HKLM|HKU|HKCC)"
-    If StringRegExp($sClipText, $sRegPattern) Then Return "REGISTRY"
-
-    ; 7. Match Absolute Directory or File Paths (e.g., C:\..., or breakout paths like +C:\...)
-    ; CRITICAL FIX: Added \+? operator to bypass window breakout markers during evaluation
-    Local $sDrivePattern = "(?i)^\+?[A-Z]:[\\/]+"
-    Local $sNetworkPattern = "^\+?[\\/]{2}"
-    
-    If StringRegExp($sClipText, $sDrivePattern) Or StringRegExp($sClipText, $sNetworkPattern) Then
-        ; Clean up prefix momentarily just to run a safe filesystem type tracking attribute lookup
-        Local $sCheckPath = $sClipText
-        If StringLeft($sCheckPath, 1) = "+" Then $sCheckPath = StringStripWS(StringMid($sCheckPath, 2), 3)
-        
-        If FileExists($sCheckPath) And StringInStr(FileGetAttrib($sCheckPath), "D") Then
-            Return "DIRECTORY_FULL"
-        EndIf
-        Return "FILE_FULL"
+    ; 3. Check for virtual shortcut folder reference keyword tags
+    If StringLeft($sCleanText, 1) == "." Or StringLeft($sCleanText, 1) == "@" Then
+        Return "ZDOT"
     EndIf
 
-    ; 8. Match Explicit Window Titles (Contains a pipe separator like: filename|notepad)
-    If StringInStr($sClipText, "|") Then Return "WINDOW_TITLE"
+    ; 4. Check for system terminal operations or command shell prefixes
+    If StringLeft($sCleanText, 1) == ">" Or StringLeft($sCleanText, 4) == "cmd " Then
+        Return "DOS_CMD"
+    EndIf
 
-    ; Default Fallback: Assume it's a partial match name query for files/folders
-    Return "PARTIAL_SEARCH"
+    Return "DEFAULT"
 EndFunc
 
-; modules\_recognizer.au3
+; End of file: _recognizer.au3

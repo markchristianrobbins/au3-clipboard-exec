@@ -1,4 +1,9 @@
 #include-once
+; ==============================================================================
+; File: _hotkeys.au3
+; Paths: C:\_\au3-clipboard-exec\modules\_hotkeys.au3
+; Description: Intercepts system hotkeys and routes extracted tokens down execution channels.
+; ==============================================================================
 
 ; Synchronized relative folder target inclusion tree mapping keys
 #include "_ui.au3"
@@ -25,41 +30,62 @@ EndFunc
 Func _Hotkey_ContextOp()
     _Util_PlaySystemSound(0x00000000)
     
+    ; CRITICAL ENTRY GUARD FIX: Check clipboard instantly *before* any variables are initialized.
+    ; This enables manual execution of the picker demo from any application window context.
+    Local $sImmediateClipCheck = StringLower(StringStripWS(ClipGet(), 3))
+    If $sImmediateClipCheck == "picker" Then
+        _UI_ShowToast("Launcher Engine", "Spawning external demo workspace navigator process...")
+        Run('"' & @AutoItExe & '" "' & @ScriptDir & '\modules\_picker_demo.au3"')
+        Return
+    EndIf
+    
+    ; 1. Try to copy highlighted text to the clipboard as a fallback fallback strategy
+    _Util_WaitForModifierRelease()
+    _Util_PurgeStuckModifiers()
+    Send("^c")
+    Sleep(50)
+    
+    ; Re-evaluate immediately post-copy to capture manual highlights inside unlisted tools
+    Local $sPostCopyCheck = StringLower(StringStripWS(ClipGet(), 3))
+    If $sPostCopyCheck == "picker" Then
+        _UI_ShowToast("Launcher Engine", "Spawning external demo workspace navigator process...")
+        Run('"' & @AutoItExe & '" "' & @ScriptDir & '\modules\_picker_demo.au3"')
+        Return
+    EndIf
+    
     Local $hWndTarget = WinGetHandle("[ACTIVE]")
 
     ; Execute our safe window profiling engine
     Local $aAppProfile = _Config_GetActiveAppProfile()
-    If @error Then
+    
+    ; Ensure $aAppProfile is a valid array before attempting subscript indexing
+    If @error Or Not IsArray($aAppProfile) Then
         Local $sErrMsg = "Context Error: Active window does not match tracking configurations."
         ClipPut($sErrMsg)
         _UI_ShowToast("Context Error", $sErrMsg)
         Return
     EndIf
 
-    Local $sName   = $aAppProfile
-    Local $sKeys   = $aAppProfile
-    Local $sScript = $aAppProfile
+    ; Restored the explicit array subscript brackets to extract variables safely
+    Local $sName   = $aAppProfile[0]
+    Local $sKeys   = $aAppProfile[1]
+    Local $sScript = $aAppProfile[2]
 
-    ; Clear clipboard before running macros to ensure fresh verification loops
+    ; Clear clipboard before running macro key combinations to guarantee fresh feedback verification loops
     ClipPut("") 
     Sleep(30)
 
     If $sKeys <> "" Then
         Local $sCleanKeys = StringStripWS($sKeys, 3)
         
-        ; Release physical modifier keys completely before typing to fix injection errors
-        _Util_WaitForModifierRelease()
-        _Util_PurgeStuckModifiers()
-        
-        ; Forcefully re-focus the targeted app window layout
         WinActivate($hWndTarget)
         WinWaitActive($hWndTarget, "", 1)
         Sleep(50)
 
-        ; Send macro layout keys natively straight down focused global thread
+        ; Send macro layout keys natively straight down focused window container thread
         Send($sCleanKeys)
         
-        ; Verification loop waiting for clipboard to catch text data
+        ; Verification loop waiting for clipboard to catch text data strings
         Local $iTimer = TimerInit()
         Local $sCurrentClip = ""
         Local $bSuccess = False
@@ -84,16 +110,13 @@ Func _Hotkey_ContextOp()
         ProcessWaitClose($iPID, 3)
     EndIf
     
-    ; --- TARGETED INTERCEPT ROUTE: LOCKED STRICTLY TO THE WIN+ALT+ENTER CONTEXT HOTKEY ---
-    Local $sManualContextCheck = StringLower(StringStripWS(ClipGet(), 3))
-    If $sManualContextCheck == "picker" Then
+    ; Secondary intercept sweep if application automation successfully output the keyword "picker"
+    Local $sFinalContextCheck = StringLower(StringStripWS(ClipGet(), 3))
+    If $sFinalContextCheck == "picker" Then
         _UI_ShowToast("Launcher Engine", "Spawning external demo workspace navigator process...")
-        
-        ; Launch the separate script file independently via the current AutoIt environment interpreter
         Run('"' & @AutoItExe & '" "' & @ScriptDir & '\modules\_picker_demo.au3"')
-        Return ; Hard stop. Prevents routing down standard automatic background clip loops.
+        Return
     EndIf
-    ; -------------------------------------------------------------------------------------
     
     _Hotkey_ClipOp()
 EndFunc
@@ -114,11 +137,17 @@ Func _Hotkey_ClipOp()
     ; 1. Execute regular expression pattern resolution routing
     Local $sType = _Recognizer_Evaluate($sClip)
     
-    ; 2. Fetch the cleaned clipboard text buffer block (after prefix removals)
+    ; 2. Fetch the cleaned clipboard text buffer block
     Local $sFinalPayload = ClipGet()
     
     ; 3. Core Engine Action Sub-Handler Router Switch Layout
     Select
+        Case $sType = "URL_LAUNCH"
+            _UI_ShowToast("Web Navigator Link", "Launching pathway in Google Chrome: " & StringLeft($sFinalPayload, 40))
+            Local $sChromePath = RegRead("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe", "")
+            If @error Or $sChromePath == "" Then $sChromePath = "chrome.exe"
+            Run('"' & $sChromePath & '" "' & $sFinalPayload & '"')
+
         Case $sType = "DIRECTORY_FULL"
             _UI_ShowToast("Routing Directory", "Opening in Directory Opus: " & $sFinalPayload)
             _Handler_OpenInDOpus($sFinalPayload, $sType)
@@ -134,4 +163,4 @@ Func _Hotkey_ClipOp()
     EndSelect
 EndFunc
 
-; modules\_hotkeys.au3
+; End of file: _hotkeys.au3

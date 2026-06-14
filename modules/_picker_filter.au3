@@ -11,10 +11,6 @@
 ; ==============================================================================
 #include "_picker_helpers.au3"
 
-; Global declarations to establish dictionary scopes safely before evaluation loops
-Global $oChildCount = 0
-Global $oGrandchildCount = 0
-
 Func _Picker_FilterPathsByFuzzyScore($aMatchesList, $sSearchTxt)
     If $sSearchTxt == "" Then Return $aMatchesList
     

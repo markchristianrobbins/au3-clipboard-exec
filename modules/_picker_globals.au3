@@ -55,6 +55,10 @@ Global $g_sSavedQueryText = ""
 Global $g_iSavedSelectedIndex = 0
 Global $g_iSavedScrollOffset = 0
 
+; Scripting Dictionary objects caching child and grandchild directories counts
+Global $oChildCount = 0
+Global $oGrandchildCount = 0
+
 ; Keyboard dummy accelerator handles mapping hooks
 Global $g_hDUp = 0
 Global $g_hDDown = 0

@@ -10,6 +10,7 @@
 ;   - _Picker_GetChildCount (Queries subdirectory cache counts)
 ;   - _Picker_GetGrandchildCount (Queries deep directory child counts)
 ; ==============================================================================
+#include "_picker_globals.au3"
 
 
 Func _Picker_GetBaseName($sFullPath)

@@ -83,7 +83,7 @@ Func _Picker_HandleKeyPress($iMsg, ByRef $aAllMatches)
     
             Case $iMsg == $g_hDPgDn And $g_iDisplayCount > 0
                 Local $iTotalMatches = UBound($g_aFilteredPaths)
-                Local $iOldAbsoluteIndex = $g_iScrollOffset + $g_g_iSelectedIndex
+                Local $iOldAbsoluteIndex = $g_iScrollOffset + $g_iSelectedIndex
                 Local $iNewAbsoluteIndex = ($iOldAbsoluteIndex + $g_iDisplayCount >= $iTotalMatches) ? $iTotalMatches - 1 : $iOldAbsoluteIndex + $g_iDisplayCount
                 _Picker_HighlightRowDynamic($g_aRowIcon, $g_aRowIdxCtrl, $g_aRowBorder, $g_aRowBg, $g_aRowPre, $g_aRowMatch, $g_aRowPost, $g_aRowPath, $g_aRowDepthInfo, $g_aFilteredPaths, $sCurrentQuery, $g_iSelectedIndex, $iOldAbsoluteIndex, False, ($iOldAbsoluteIndex < $g_iRecentCount), $g_bExploreMode, $g_sExploreDir, $iInputAreaHeight)
                 If $iNewAbsoluteIndex >= $iTotalMatches - ($g_iDisplayCount - $g_iSelectedIndex) Then

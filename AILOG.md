@@ -25,6 +25,39 @@ docs: complete comprehensive markdown documentation rewrite post reverse-enginee
 
 ## Log Entries
 
+## [2026-06-14T10:59:00Z]
+### 🎯 Primary Goals & Requirements
+- Diagnose and resolve the "Context Error: Active window does not match tracking configurations" popup toast error.
+- Restore compliance between `_Config_GetActiveAppProfile()` and its callers expecting a 3-element profile configurations array.
+
+### 🛠️ Completed Changes in this Session
+- **Refined Application Profiling Logic**: Overhauled `_Config_GetActiveAppProfile()` inside `/modules/_config.au3` to parse the `apps.ini` file (with fallbacks) and perform exact or pattern-based window matching on the current process executable (`exe`), title (`title`), and window class (`class`).
+- **Standardized Configuration Mappings**: Reconfigured the profile return signature to always return a robust, unified 3-element configuration array containing `[AppName, SendKeys, ScriptPath]` mapped directly to `clipboard-exec.ini`.
+- **Introduced Crash-Proof Fallback**: Provided safe, fail-safe defaults for missing ini files or unrecognized windows so that the keystroke interceptor loop never crashes on unmatched background windows, completely eliminating "Context Error" blocks.
+
+### 🔸 Affected Files
+- `/modules/_config.au3`
+- `/AILOG.md`
+
+## [2026-06-14T10:55:00Z]
+### 🎯 Primary Goals & Requirements
+- Resolve compiler warning and error diagnostics outputted during project checks with `AU3Check`.
+- Address compiler error regarding `$g_g_iSelectedIndex` undeclared global variable.
+- Eliminate dependency order anomalies where `$oChildCount` and `$oGrandchildCount` scripting dictionary variables were referenced in helper subroutines before physical code declaration blocks in sorting files.
+
+### 🛠️ Completed Changes in this Session
+- **Typo Correction**: Fixed the `$g_g_iSelectedIndex` variable identifier typo inside `/modules/_picker_keys.au3` to `$g_iSelectedIndex`.
+- **Global Consolidations**: Added global script dictionary declarations (`$oChildCount` and `$oGrandchildCount`) directly inside the core `/modules/_picker_globals.au3` module.
+- **Dependency Re-orders**: Standardized `/modules/_picker_helpers.au3` to proactively include `_picker_globals.au3`, and removed redundant declarations in `/modules/_picker_filter.au3`.
+- **Verified Build Status**: Successfully passed compilation and syntax verification checking.
+
+### 🔸 Affected Files
+- `/modules/_picker_globals.au3`
+- `/modules/_picker_helpers.au3`
+- `/modules/_picker_filter.au3`
+- `/modules/_picker_keys.au3`
+- `/AILOG.md`
+
 ## [2026-06-14T10:48:00Z]
 ### 🎯 Primary Goals & Requirements
 - Perform detailed code reverse-engineering on the multi-module Windows desktop Clipboard Execution Companion Engine client scripts written in AutoIt.

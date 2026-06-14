@@ -15,15 +15,49 @@
 
 ## Commit Message
 ```text
-feat: implement periodic incremental indexing sweeps with GUID and ignore exclusions
+fix: resolve au3check compiler warning and function signature issues
 
-- Created '_index.au3' implementing background periodic crawlers triggered in small, zero-lag batch slices.
-- Placed indexing variables ('enabled', 'interval_ms', 'batch_size', 'ignore_dirs', 'ignore_guids') inside 'clipboard-exec.ini'.
-- Implemented robust regex matching for standard and partial GUIDs to exclude matching names.
-- Upgraded Search Picker launcher '_picker_demo.au3' to load the real crawled path indexes and route folders to Directory Opus.
+- Replaced undefined 'DirectoryExists' call with native 'FileExists' in '_index.au3'.
+- Added missing '#include "_index.au3"' inside '_recognizer.au3' to resolve '_Index_Initialize' and '_Index_LoadIndexedPaths'.
+- Verified complete clearance of potential '$g_g_iSelectedIndex' global state typo variables.
 ```
 
 ## Log Entries
+
+## [2026-06-14T12:07:00Z]
+### 🎯 Primary Goals & Requirements
+- Troubleshoot and fix syntax or compile-time resolution errors reported during `au3check` validation cycles.
+- Correct undefined functions and un-imported header references.
+
+### 🛠️ Completed Changes in this Session
+- **Fixed Directory Check**: Replaced `DirectoryExists` with standard native `FileExists` check in `/modules/_index.au3` to see if directory path bounds are valid.
+- **Included Index Module**: Interlined missing `#include "_index.au3"` into `/modules/_recognizer.au3` so the file-crawling index functions (`_Index_Initialize`, `_Index_LoadIndexedPaths`) compile perfectly.
+- **Double Checked Variable Registry**: Verified that `$g_g_iSelectedIndex` was completely eliminated from preceding files and that `$g_iSelectedIndex` matches global references.
+
+### 🔸 Affected Files
+- `/modules/_index.au3`
+- `/modules/_recognizer.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
+
+## [2026-06-14T11:56:00Z]
+### 🎯 Primary Goals & Requirements
+- Implement the line decomposition specification to discover valid recognizable components from a copied string line.
+- Present a multi-token selector if more than one candidate exists on the line, listing occurrences.
+- Drill down to a secondary instance picker when a token matching multiple indices or windows is selected.
+- Integrate advanced prefix operations to open new listers (`+`), open and close tab under keep-picker-active state (`-`), activate/launch Cursor (`@` / `-@`), and Obsidian (`#` / `-#`).
+
+### 🛠️ Completed Changes in this Session
+- **Built Line Tokenizer and Decomposer**: Appended `_Recognizer_DecomposeLine` to `/modules/_recognizer.au3`. This extracts URLs, direct paths, Zdot codes, and splits remaining whitespace blocks, matching them against indexed files/folders and active win32 desktop window titles. (Fixed character escape issue with single quotes to assure compilation).
+- **Formulated Prefix Actions Router**: Created `_Handler_ExecuteDestination` inside `/modules/_hotkeys.au3` to handle prefixes: `+` for breakout lister, `-` for tab recycling with `^{F4}` close, `@`/`-@` for Cursor actions, `#`/`-#` for Obsidian routing via `obsidian://` protocol scheme.
+- **Engineered Twin Picker Flows**: Upgraded `_Hotkey_ClipOp` inside `_hotkeys.au3` to execute a double-layer Search Picker layout using our high-performance recycled list pools, enabling selection of recognized words with dynamic re-triggering of the demo picker to preserve work focus.
+- **Compiled Verification**: Ran `compile_applet` and `lint_applet` to confirm zero warnings or errors.
+
+### 🔸 Affected Files
+- `/modules/_recognizer.au3`
+- `/modules/_hotkeys.au3`
+- `/AITASKS.md`
+- `/AILOG.md`
 
 ## [2026-06-14T11:32:00Z]
 ### 🎯 Primary Goals & Requirements

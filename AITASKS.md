@@ -30,6 +30,25 @@
 - [x] Support folder file:/// URLs in directory router
     - Enabled identification and parsing of file:/// and file:// addresses (including local and network shares) to behave exactly like standard native paths in Directory Opus.
 
+## [x] Implement New Specifications (Line Decomposition & Prefixes)
+- [x] Implement Line Decomposition logic on Win+Alt+Enter input:
+    - Extract multiple tokens (URLs, paths, words referencing files or directories from indexes / disk, or window titles).
+    - Design a multi-token Picker overlay showing recognized tokens and their occurrences.
+    - Launch a secondary Picker (instances list) upon choosing a decomposed token.
+- [x] Integrate Advanced Prefix-based App Routers:
+    - Support `+` prefix: open directory in a new Directory Opus window instance.
+    - Support `-` prefix: reuse active Directory Opus tab, issue close command (`^f4`), and keep Picker open.
+    - Support `@` and `-@` prefixes: open/activate or close Cursor on target directories.
+    - Support `#` and `-#` prefixes: open/activate or close Obsidian on target directories.
+
+## [x] Resolve au3check Compiler and Function Declarations Bugs
+- [x] Correct undefined `DirectoryExists` reference:
+    - Replaced with standard compatible native `FileExists` check inside `_index.au3`.
+- [x] Resolve undeclared variables:
+    - Verified complete clearance of `$g_g_iSelectedIndex` double-g prefixes within `_picker_keys.au3`.
+- [x] Fix undefined references:
+    - Appended `#include "_index.au3"` into `_recognizer.au3` to resolve compiled bindings of `_Index_Initialize()` and `_Index_LoadIndexedPaths()`.
+
 ## [ ] New Changes
 - [ ] Migrate central app configurations inside `.ini` layouts to JSON
     - Define robust schemas for mapping application names to window behaviors.

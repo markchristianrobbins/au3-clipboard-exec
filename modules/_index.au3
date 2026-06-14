@@ -190,7 +190,7 @@ Func _Index_SaveIndexToDisk()
     _ArraySort($aKeys)
     
     Local $sIndexFilePath = @ScriptDir & "\..\clipboard-exec-index.txt"
-    If Not DirectoryExists(@ScriptDir & "\..\") Then $sIndexFilePath = @ScriptDir & "\clipboard-exec-index.txt"
+    If Not FileExists(@ScriptDir & "\..\") Then $sIndexFilePath = @ScriptDir & "\clipboard-exec-index.txt"
     
     Local $hFile = FileOpen($sIndexFilePath, 2) ; Overwrite mode
     If $hFile <> -1 Then

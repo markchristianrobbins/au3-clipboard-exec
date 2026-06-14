@@ -48,4 +48,17 @@ Func _Util_IsOverlappedWindow($hWnd)
     Return (BitAND($iStyle, 0x40000000) == 0) And (BitAND($iStyle, 0x80000000) == 0)
 EndFunc
 
+; ==============================================================================
+; Public API: Plays a pleasant, upbeat happy sound sequence when indexing finishes
+; ==============================================================================
+Func _Util_PlayHappySound()
+    Beep(523, 100) ; C5
+    Sleep(50)
+    Beep(659, 100) ; E5
+    Sleep(50)
+    Beep(784, 100) ; G5
+    Sleep(50)
+    Beep(1046, 150) ; C6
+EndFunc
+
 ; modules\_utils.au3

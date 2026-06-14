@@ -33,7 +33,18 @@ _Engine_RegisterHotkey("#!{ENTER}", "_Hotkey_ContextOp")   ; Win+Alt+Enter
 _Engine_RegisterHotkey("#!+{ENTER}", "_Hotkey_ClipOp")     ; Win+Alt+Shift+Enter
 _Engine_RegisterHotkey("#^!{ENTER}", "_Hotkey_WinCtrlAltEnter") ; Win+Ctrl+Alt+Enter
 
-_UI_ShowToast("Clipboard Exec", "Engine initialized and listening for hotkeys.")
+; Put a please wait in the toast
+Local $aToast = _UI_ShowStartupToast("Clipboard Exec", "Indexing directories... Please wait.")
+
+; Perform the synchronous complete directory indexing all at once!
+_Index_ForceReload(True)
+
+; Make a happy sound when done
+_Util_PlayHappySound()
+
+; Update and close the startup toast smoothly
+_UI_UpdateStartupToast($aToast, "Clipboard Exec", "Engine initialized and listening for hotkeys.")
+_UI_CloseStartupToast($aToast, 4000)
 
 ; Persistent Main Application Non-Blocking Loop
 While 1
@@ -43,7 +54,6 @@ While 1
             _Hotkey_Exit()
     EndSelect
     
-    _Index_ProcessQueueBatch()
     Sleep(10)
 WEnd
 

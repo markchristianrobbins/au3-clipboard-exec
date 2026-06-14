@@ -15,6 +15,10 @@
 - ▪️[TESTING.md](TESTING.md)
 
 ## [x] Incoming tasks from chat
+- [x] Remove batched background indexing and perform a synchronous full pre-index crawl on startup
+    - Removed `_Index_ProcessQueueBatch` and background sweep timers/variables entirely from `_index.au3` and the primary entry loop.
+    - Setup live startup notification routines (`_UI_ShowStartupToast`, `_UI_UpdateStartupToast`, `_UI_CloseStartupToast`) to hold a "Please wait" state during crawler routines and update gracefully dynamically afterwards.
+    - Engineered `_Util_PlayHappySound()` containing high-fidelity arpeggio `Beep` sequences to signal indexing completion.
 - [x] Fix EndWhile syntax bug in background index crawler script loops
     - Replaced the erroneous 'EndWhile' statement with native AutoIt 'WEnd' loop terminator on line 423 of '_index.au3'.
 - [x] Prioritize script-directory settings and profile files over central `C:\$data` fallbacks

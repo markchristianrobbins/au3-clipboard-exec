@@ -5,11 +5,8 @@
 #include "_ui.au3"
 #include "_config.au3"
 
-; Global tracking states for background periodic index sweeps
-Global $g_aIndexQueue[0]
+; Global tracking states for indexed files/folders
 Global $g_oIndexMap = Null
-Global $g_bIndexDirty = False
-Global $g_iLastBatchTime = 0
 
 ; ==============================================================================
 ; Diagnostic Logger Helper: Appends timestamped trace logs directly under the tool workspace
@@ -70,144 +67,6 @@ Func _Index_Initialize()
     Else
         _Index_LogDiagnostic("Index database file STILL does not exist after creation check.")
     EndIf
-EndFunc
-
-; ==============================================================================
-; Public API: Performs a single light, non-blocking chunk crawl sweep over directories
-; ==============================================================================
-Func _Index_ProcessQueueBatch()
-    _Index_Initialize()
-    
-    Local $sConfigIni = _Config_GetIniPath()
-    
-    Local $sEnabled = IniRead($sConfigIni, "indexing", "enabled", "true")
-    If StringLower($sEnabled) <> "true" Then Return
-    
-    Local $iInterval = Int(IniRead($sConfigIni, "indexing", "interval_ms", "15000"))
-    If TimerDiff($g_iLastBatchTime) < $iInterval And $g_iLastBatchTime <> 0 Then Return
-    $g_iLastBatchTime = TimerInit()
-    
-    _Index_LogDiagnostic("------------------ BATCH PROCESS START ------------------")
-    _Index_LogDiagnostic("Resolved CONFIG INI: " & $sConfigIni)
-    
-    Local $iBatchSize = Int(IniRead($sConfigIni, "indexing", "batch_size", "10"))
-    Local $sIgnoreDirsStr = IniRead($sConfigIni, "indexing", "ignore_dirs", "node_modules;.git;.svn;dist;.next;build")
-    Local $bIgnoreGuids = (StringLower(IniRead($sConfigIni, "indexing", "ignore_guids", "true")) == "true")
-    Local $bIgnoreFiles = (StringLower(IniRead($sConfigIni, "indexing", "ignore_files", "true")) == "true")
-    
-    Local $aIgnoreDirs = StringSplit($sIgnoreDirsStr, ";")
-    
-    $g_bIndexDirty = False
-    
-    ; 2. If the scanner queue is currently empty, query sections and initialize root crawl states
-    If UBound($g_aIndexQueue) == 0 Then
-        _Index_LogDiagnostic("Queue is empty. Loading roots for new crawl...")
-        Local $aRootSections = IniReadSection($sConfigIni, "index-paths")
-        If Not @error Then
-            For $i = 1 To $aRootSections[0][0]
-                Local $sRoot = StringStripWS($aRootSections[$i][1], 3)
-                $sRoot = StringRegExpReplace($sRoot, '^"|"$', '') ; Strip surrounding double quotes if any
-                $sRoot = StringRegExpReplace($sRoot, "^'|'$", '') ; Strip single quotes
-                _Index_LogDiagnostic("Configured root -> key=" & $aRootSections[$i][0] & ", val=" & $sRoot & ", exists=" & FileExists($sRoot))
-                If FileExists($sRoot) Then
-                    _ArrayAdd($g_aIndexQueue, $sRoot)
-                    ; Add root directory itself to the database index
-                    If Not $g_oIndexMap.Exists($sRoot) Then
-                        $g_oIndexMap.Add($sRoot, 1)
-                        $g_bIndexDirty = True
-                        _Index_LogDiagnostic("  Added root to index map: " & $sRoot)
-                    EndIf
-                EndIf
-            Next
-        Else
-            _Index_LogDiagnostic("  ERROR reading 'index-paths' INI section.")
-        EndIf
-    EndIf
-    
-    Local $iQueueSize = UBound($g_aIndexQueue)
-    _Index_LogDiagnostic("Queue contains " & $iQueueSize & " directories pending crawl.")
-    If $iQueueSize == 0 Then
-        _Index_LogDiagnostic("------------------ BATCH PROCESS END (No Queue) ------------------")
-        Return
-    EndIf
-    
-    Local $iProcessed = 0
-    Local $iPathsAdded = 0
-    
-    While $iProcessed < $iBatchSize And UBound($g_aIndexQueue) > 0
-        Local $sCurrentDir = $g_aIndexQueue[0]
-        _ArrayDelete($g_aIndexQueue, 0)
-        $iProcessed += 1
-        
-        _Index_LogDiagnostic("  Processing batch step [" & $iProcessed & "]: " & $sCurrentDir)
-        If Not FileExists($sCurrentDir) Then
-            _Index_LogDiagnostic("    Directory no longer exists: " & $sCurrentDir)
-            ContinueLoop
-        EndIf
-        
-        Local $hSearch = FileFindFirstFile($sCurrentDir & "\*.*")
-        If $hSearch == -1 Then
-            _Index_LogDiagnostic("    FileFindFirstFile returned -1. @error=" & @error)
-            ContinueLoop
-        EndIf
-        
-        While 1
-            Local $sFileName = FileFindNextFile($hSearch)
-            If @error Then ExitLoop
-            
-            ; Filter out system namespaces
-            If $sFileName == "." Or $sFileName == ".." Then ContinueLoop
-            
-            Local $sFullPath = $sCurrentDir
-            If StringRight($sFullPath, 1) <> "\" Then $sFullPath &= "\"
-            $sFullPath &= $sFileName
-            
-            ; Detect file directory structures
-            Local $bIsDir = StringInStr(FileGetAttrib($sFullPath), "D") > 0
-            
-            ; Validate ignores and bypass node_modules
-            Local $bSkip = False
-            If $bIsDir Then
-                For $j = 1 To $aIgnoreDirs[0]
-                    If StringLower($sFileName) == StringLower($aIgnoreDirs[$j]) Then
-                        $bSkip = True
-                        ExitLoop
-                    EndIf
-                Next
-            Else
-                ; Ignore file entries if configure key demands folder tracking exclusively
-                If $bIgnoreFiles Then $bSkip = True
-            Endif
-            
-            If $bSkip Then ContinueLoop
-            
-            ; GUID and Partial GUID file filters
-            If $bIgnoreGuids Then
-                If _Index_IsGuidPattern($sFileName) Then ContinueLoop
-            Endif
-            
-            ; If directory, append to queue loops for structural recursion sweeps
-            If $bIsDir Then
-                _ArrayAdd($g_aIndexQueue, $sFullPath)
-            EndIf
-            
-            ; Store coordinates in system database register map if completely unique
-            If Not $g_oIndexMap.Exists($sFullPath) Then
-                $g_oIndexMap.Add($sFullPath, 1)
-                $g_bIndexDirty = True
-                $iPathsAdded += 1
-            EndIf
-        WEnd
-        FileClose($hSearch)
-    WEnd
-    
-    _Index_LogDiagnostic("Batch step complete. Processed=" & $iProcessed & ", Queue remaining=" & UBound($g_aIndexQueue) & ", Unique paths added=" & $iPathsAdded & ", Dirty=" & $g_bIndexDirty)
-    
-    ; 3. Write modified profiles back to standard index document
-    If $g_bIndexDirty Then
-        _Index_SaveIndexToDisk()
-    EndIf
-    _Index_LogDiagnostic("------------------ BATCH PROCESS END ------------------")
 EndFunc
 
 ; ==============================================================================
@@ -272,7 +131,7 @@ EndFunc
 ; ==============================================================================
 ; Public API: Forces an on-demand complete recursive sweep across configured roots
 ; ==============================================================================
-Func _Index_ForceReload()
+Func _Index_ForceReload($bQuiet = False)
     _Index_Initialize()
     _Index_LogDiagnostic("================== FORCE RELOAD START ==================")
     
@@ -281,14 +140,14 @@ Func _Index_ForceReload()
     _Index_LogDiagnostic("Resolved CONFIG INI Path: " & $sConfigIni)
     If Not FileExists($sConfigIni) Then
         _Index_LogDiagnostic("CRITICAL CONFIG ERROR: Configuration INI file does not exist anywhere!")
-        _UI_ShowToast("Index Reload", "Configuration INI file not found.")
+        If Not $bQuiet Then _UI_ShowToast("Index Reload", "Configuration INI file not found.")
         Return
     EndIf
     
     Local $aRootSections = IniReadSection($sConfigIni, "index-paths")
     If @error Or Not IsArray($aRootSections) Then
         _Index_LogDiagnostic("CRITICAL CONFIG ERROR: 'index-paths' section is missing or empty in Config INI. @error=" & @error)
-        _UI_ShowToast("Index Reload", "No root index-paths configured in INI.")
+        If Not $bQuiet Then _UI_ShowToast("Index Reload", "No root index-paths configured in INI.")
         Return
     EndIf
     
@@ -335,7 +194,7 @@ Func _Index_ForceReload()
     
     If $iCount == 0 Then
         _Index_LogDiagnostic("CRITICAL: No active root index-paths exist on disk. Crawl aborted.")
-        _UI_ShowToast("Index Reload", "No active root index-paths exist on disk.")
+        If Not $bQuiet Then _UI_ShowToast("Index Reload", "No active root index-paths exist on disk.")
         Return
     EndIf
     
@@ -428,7 +287,7 @@ Func _Index_ForceReload()
     _Index_LogDiagnostic("BFS Crawl Complete. Found total unique entries: " & $iCount)
     _Index_SaveIndexToDisk()
     _Index_LogDiagnostic("================== FORCE RELOAD END ==================")
-    _UI_ShowToast("Index Reloaded", "Successfully crawled & saved " & $iCount & " directories to disk.")
+    If Not $bQuiet Then _UI_ShowToast("Index Reloaded", "Successfully crawled & saved " & $iCount & " directories to disk.")
 EndFunc
 
 ; ==============================================================================

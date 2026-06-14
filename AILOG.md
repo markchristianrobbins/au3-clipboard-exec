@@ -15,14 +15,37 @@
 
 ## Commit Message
 ```text
-feat(index): rewrite force reload utilizing robust, zero-dependency native array pointer queue and strip surrounding quotes from config paths
+feat(index): replace background batch sweeps with synchronous startup indexing, custom notification, and audio chime
 
-- Replaced COM-based System.Collections.ArrayList inside _Index_ForceReload with a 100% native AutoIt circular array pointer queue to eliminate script crashes and COM initialization blockages.
-- Added regex quote-stripping patterns in both index sweep routines to clean surrounding double and single quotes from paths configured in IniReadSection records.
-- Standardized directory-level files/directories traversal parameters ensuring full parity with background batch slicing settings.
+- Removed background batch crawls completely along with obsolete queue variables and the _Index_ProcessQueueBatch routine.
+- Created non-blocking custom startup toast functions (_UI_ShowStartupToast, _UI_UpdateStartupToast, _UI_CloseStartupToast) in _ui.au3 to support live status updates.
+- Configured _Index_ForceReload to support a quiet parameter, preventing nested notification alerts.
+- Leveraged native Beep pitch configurations to design a cheerful major chord arpeggio happy chime sound (_Util_PlayHappySound).
+- Synced the primary entry point to crawl paths immediately on script load, keeping the "Please wait" visual state active until pre-indexing is completed and the happy sound has triggered.
 ```
 
 ## Log Entries
+
+## [2026-06-14T23:39:00Z]
+### 🎯 Primary Goals & Requirements
+- Completely remove the background, periodic directory batch crawling sweeps to prevent runtime delays and disk overhead in active sessions.
+- Perform the complete directory indexing crawl all at once on script startup.
+- Prevent the first toast message from being removed before indexing completes.
+- Display an explicit "Please wait" indicator inside the startup toast message.
+- Make a happy audio chime sound when directory crawls successfully complete.
+
+### 🛠️ Completed Changes in this Session
+- **Synchronous Startup Crawling (`/clipboard-exec.au3`, `/modules/_index.au3`)**: Removed `$g_aIndexQueue`, `$g_bIndexDirty`, `$g_iLastBatchTime`, and `_Index_ProcessQueueBatch` completely from the codebase and the persistent While loop. Updated script entry logic to crawl all root paths completely and synchronously on load.
+- **Dynamic Startup Notifications (`/modules/_ui.au3`)**: Implemented non-blocking toast functions (`_UI_ShowStartupToast`, `_UI_UpdateStartupToast`, `_UI_CloseStartupToast`) returning a control IDs array to update titles/messages and close windows after custom durations.
+- **Quiet Flag Configuration (`/modules/_index.au3`)**: Appended `$bQuiet = False` parameter into `_Index_ForceReload()`, allowing quiet runs that bypass standard notification displays.
+- **Upbeat Audio Feedback Chime (`/modules/_utils.au3`)**: Tailored `_Util_PlayHappySound` implementing high-fidelity ascending major arpeggios (`C5 - E5 - G5 - C6`) on the native `Beep` PC speaker stream.
+- **Workflow State Consolidation (`/clipboard-exec.au3`)**: Integrated the startup flow to: render the indexing notification, perform quiet directory sweeps all at once, play the major arpeggio chime, update the toast message with an active confirmation notice, and delay its closing for 4 seconds seamlessly.
+
+### 🔸 Affected Files
+- `/clipboard-exec.au3`
+- `/modules/_index.au3`
+- `/modules/_ui.au3`
+- `/modules/_utils.au3`
 
 ## [2026-06-14T23:01:00Z]
 ### 🎯 Primary Goals & Requirements

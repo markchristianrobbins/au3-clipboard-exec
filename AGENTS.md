@@ -36,6 +36,13 @@
 ### Inline Tasks
 - Tasks or instructions from developers embedded within source files are denoted by standard comments matching the syntax: `; //! {instruction}`.
 
+## AI Documentation & Workflow Mandates
+- **Every turn changes are made**: The AI MUST create a chronological log entry block in `/AILOG.md` with:
+  - Day timestamp header, Primary Goals & Requirements, Completed Changes in this Session, and Affected Files.
+  - The AI MUST update the central "Commit Message" codeblock in `/AILOG.md` to accurately summarize the latest batch of modifications.
+- **Every turn user provides chat tasks**: The AI MUST immediately add/update corresponding checkboxes under a prominent section in `/AITASKS.md` (e.g. `## [x] Incoming tasks from chat` or `## [ ] New Changes` / `## [x] Completed Changes`) to track every explicit feature instruction given in chat.
+- **Workflow State Synced**: All files (`/AGENTS.md`, `/AILOG.md`, `/AITASKS.md`, and any user-targeted codebase scripts) must always match state and lists precisely upon closing action cycles.
+
 ## Project Context
 - **Workspace Dir**: `C:\_\au3-clipboard-exec\`
 - **Database Index**: Generated static map compiled dynamically in `C:\_\au3-clipboard-exec\clipboard-exec-index.txt`.

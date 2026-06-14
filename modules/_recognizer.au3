@@ -21,8 +21,8 @@ Func _Recognizer_Evaluate($sTextData)
         Return "DIRECTORY_FULL"
     EndIf
 
-    ; 3. Check for virtual shortcut folder reference keyword tags
-    If StringLeft($sCleanText, 1) == "." Or StringLeft($sCleanText, 1) == "@" Then
+    ; 3. Check for virtual shortcut folder reference keyword tags or Zdot temporal tokens
+    If StringLeft($sCleanText, 1) == "." Or StringLeft($sCleanText, 1) == "@" Or StringRegExp($sCleanText, "(?i)^z[\.-]?\d{14,20}$") Then
         Return "ZDOT"
     EndIf
 

@@ -21,6 +21,12 @@
     - Unraveled the Search Picker GUI design specs, custom hashing algorithms, colors, and key interceptors.
 - [x] Document code metrics and update structural markdown files
     - Overwrote AGENTS, AILOG, AITASKARCH, AITASKS, BUILD, CODE, FEATURES, MANUAL, README, SPEC, and TESTING.
+- [x] Resolve active window tracking match / profile configuration crash
+    - Refined configuration lookup logic in `_config.au3` and resolved native win32 API call using `_WinAPI_GetClassName` safely.
+- [x] Improve Zdot regex routing and temporal token matching
+    - Enabled seamless identification of both `z-` and `z.` prefixed chronological timestamps in clipboard evaluated states, seeking `z.` target markers correctly inside the indexed source files.
+- [x] Codify explicit AI logger and chat tracking instruction rules in AGENTS.md
+    - Formalized strict workflow parameters requiring `AILOG.md` edits, updated commit message registries, and inline `AITASKS.md` checklists for every turn.
 
 ## [ ] New Changes
 - [ ] Migrate central app configurations inside `.ini` layouts to JSON

@@ -1,6 +1,7 @@
 #include-once
 #include <AutoItConstants.au3>
 #include <WinAPIProc.au3>
+#include <WinAPISys.au3>
 
 ; Global storage paths for configuration infrastructure
 Global Const $g_sMainIni = "C:\$data\clipboard-exec.ini"
@@ -30,7 +31,7 @@ Func _Config_GetActiveAppProfile()
     Local $sCurrentExe = StringLower(StringMid($sFullPathExe, $iSlashPos + 1))
     
     ; Also get the active window class and title for matching
-    Local $sPrimaryClass = StringLower(WinGetClass($hWnd))
+    Local $sPrimaryClass = StringLower(_WinAPI_GetClassName($hWnd))
     Local $sCurrentClass = StringLower(WinGetClassList($hWnd))
     Local $sCurrentTitle = WinGetTitle($hWnd)
 

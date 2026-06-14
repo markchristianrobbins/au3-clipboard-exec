@@ -15,15 +15,56 @@
 
 ## Commit Message
 ```text
-docs: complete comprehensive markdown documentation rewrite post reverse-engineering
+docs: codify AI logging, tracking, and commit message workflow guidelines
 
-- Analyzed full AutoIt code modules including Core Engine, Recognizer, DOpus Handler, ZDot resolver, and CLI CMD interceptor.
-- Unraveled search picker dynamic layout components (Event, Filter, Globals, GUI, Keys, Recents, Render, Style).
-- Reconfigured metadata.json and completely rewrote AGENTS, AILOG, AITASKS, BUILD, CODE, FEATURES, MANUAL, README, SPEC, and TESTING markdown files from placeholders to exact operational documentations.
-- Cleared mojibake encoding errors from AITASKARCH.md and formatted historical listings.
+- Created strict behavioral mandate section in 'AGENTS.md' specifying auto-logging, auto-tasking, and synchronization parameters for each development turn.
+- Updated 'AITASKS.md' to register the task tracking framework constraints as fully resolved.
+- Appended latest change events and chronological histories to development logs.
 ```
 
 ## Log Entries
+
+## [2026-06-14T11:15:00Z]
+### 🎯 Primary Goals & Requirements
+- Codify explicit instructions to prevent future workspace regression regarding AI logging, commit messages, and task files.
+- Persist strict guidelines in the primary configurations file so they are loaded automatically as system instructions.
+
+### 🛠️ Completed Changes in this Session
+- **Injected AI Flow Guidelines**: Appended `## AI Documentation & Workflow Mandates` inside `/AGENTS.md` explicitly defining requirements for logs with goals, changes, affected files, commit messages, and syncing mechanisms.
+- **Synced Task Register**: Checkmarked the logging and tracking constraint tasks inside `/AITASKS.md`.
+- **Verified Clean Build**: Successfully ran compilation verify checks.
+
+### 🔸 Affected Files
+- `/AGENTS.md`
+- `/AITASKS.md`
+- `/AILOG.md`
+
+## [2026-06-14T11:10:00Z]
+### 🎯 Primary Goals & Requirements
+- Fix the issue where copying `z-202606140932595351` plays a warning chime but fails to compile target coordinates inside source files because it evaluates to `DEFAULT`.
+- Enable full identification of any `z-` or `z.` prefixed chronological timestamps in the clipboard classifier.
+
+### 🛠️ Completed Changes in this Session
+- **Regex Routing Enhancements**: Augmented `_Recognizer_Evaluate` inside `/modules/_recognizer.au3` to match dynamic cases where clipboard patterns start with `z-` or `z.` followed by 14-20 digit coordinate timestamps.
+- **Matched Target Alignment**: Guaranteed that all user targets (e.g. `z-202606140932595351` or `z.202606140932595351`) are categorized as `ZDOT` and correctly passed down to the calendar resolver script.
+
+### 🔸 Affected Files
+- `/modules/_recognizer.au3`
+- `/AILOG.md`
+
+## [2026-06-14T11:05:00Z]
+### 🎯 Primary Goals & Requirements
+- Troubleshoot the persistent AutoIt native execution error: `Error: Unknown function name.` targeting `WinGetClass()`.
+- Identify the correct AutoIt User Defined Function (UDF) or Win32 API to fetch the active window's primary class name safely.
+
+### 🛠️ Completed Changes in this Session
+- **Corrected Function Reference**: Replaced the non-existent standard built-in `WinGetClass($hWnd)` function with the official AutoIt UDF call `_WinAPI_GetClassName($hWnd)`.
+- **Imported API Headers**: Included the `<WinAPISys.au3>` library header at the top of `/modules/_config.au3` to resolve the external standard win32 API wrapper signature.
+- **Ensured Successful Compilation**: Validated that all files compile and pass linter checks under clean workspace conditions with zero remaining syntax warnings or missing reference errors.
+
+### 🔸 Affected Files
+- `/modules/_config.au3`
+- `/AILOG.md`
 
 ## [2026-06-14T10:59:00Z]
 ### 🎯 Primary Goals & Requirements

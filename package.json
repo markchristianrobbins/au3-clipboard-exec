@@ -1,7 +1,7 @@
 {
-  "name": "",
-  "displayName": "",
-  "description": "",
+  "name": "au3-clipboard-exec",
+  "displayName": "Clipboard Exec",
+  "description": "Execute Clipboard",
   "version": "0.0.1",
   "publisher": "markchristianrobbins",
   "engines": {

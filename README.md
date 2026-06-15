@@ -4,7 +4,7 @@
 [![Environment](https://img.shields.io/badge/environment-Windows_/_AutoIt3-green.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-purple.svg)](#)
 
-![icon.jpg]
+![icon](icon.jpg)
 A high-performance Windows systems tray automation framework written in AutoIt v3 that captures system window context, analyzes clipboard strings via Regular Expression routing pipelines, and directs commands down target application workflows.
 
 The system handles everything from seamless Directory Opus folder launches (tab-reusing or new breakout-windows) to executing hidden standard shell commands and piping live console summaries directly back into focus arrays. It features an interactive, stunningly styled, custom borderless Search Picker GUI that sorts wildcard queries, matches sub-strings, remembers and persists folder history, and brand-colors listings dynamically on the fly.
